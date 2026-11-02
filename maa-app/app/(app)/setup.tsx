@@ -1,405 +1,628 @@
 /**
- * Screen 2: Family Setup
- * Configure relationship, upload media, review processing status.
+ * Screen: Family Household Hub & Character Ingestion (પરિવાર - Setup)
+ *
+ * Manage all household members using sleek Lucide icons.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, TextInput, Alert, ActivityIndicator,
+  TouchableOpacity, TextInput, Alert, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
-import * as DocumentPicker from 'expo-document-picker';
 import { Colors } from '../../constants/Colors';
-import { Typography, Spacing, BorderRadius } from '../../constants/Typography';
-import { apiClient } from '../../services/api';
+import { useAuthStore } from '../../stores/auth';
+import { useMemoryStore } from '../../stores/memory';
+import {
+  Users,
+  UserPlus,
+  CheckCircle2,
+  Quote,
+  FileText,
+  Sparkles,
+  X,
+  User,
+  Heart,
+  Crown,
+  Smile,
+  ShieldCheck,
+} from 'lucide-react-native';
+
+const KINSHIP_SUGGESTIONS = [
+  { label: 'પૌત્ર (Grandson)', call: 'દિકરા' },
+  { label: 'દીકરો (Son)', call: 'ભાઈ' },
+  { label: 'પૌત્રી (Granddaughter)', call: 'દિકરી' },
+  { label: 'પુત્રવધૂ (Daughter-in-law)', call: 'વહુ બેટા' },
+  { label: 'દીકરી (Daughter)', call: 'બેટા' },
+  { label: 'જમાઈ (Son-in-law)', call: 'જમાઈરાજ' },
+  { label: 'ભાણેજ (Nephew)', call: 'ભાણિયા' },
+];
 
 export default function SetupScreen() {
-  const [relationship, setRelationship] = useState('grandson');
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+  const {
+    familyMembers, activeMember, setActiveMember,
+    addFamilyMember, user,
+  } = useAuthStore();
 
-  // Transcript ingestion state
+  const { createMemory } = useMemoryStore();
+
+  // Add Member Modal State
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberKinship, setNewMemberKinship] = useState(KINSHIP_SUGGESTIONS[0].label);
+  const [newMemberCall, setNewMemberCall] = useState(KINSHIP_SUGGESTIONS[0].call);
+
+  // Fast Transcript Ingestion State
   const [transcriptText, setTranscriptText] = useState('');
-  const [transcriptSource, setTranscriptSource] = useState('');
-  const [isIngestingTranscript, setIsIngestingTranscript] = useState(false);
-  const [transcriptResult, setTranscriptResult] = useState<string | null>(null);
+  const [transcriptTopic, setTranscriptTopic] = useState('');
+  const [ingestSuccess, setIngestSuccess] = useState(false);
 
-  const RELATIONSHIPS = [
-    'grandson', 'granddaughter', 'son', 'daughter',
-    'son-in-law', 'daughter-in-law', 'great-grandchild', 'other',
-  ];
-
-  useEffect(() => {
-    // Load current profile on mount
-    apiClient.get<{ relationship?: string }>('/family/profile')
-      .then(res => {
-        if (res.relationship) setRelationship(res.relationship);
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleSelectRelationship = async (rel: string) => {
-    setRelationship(rel);
-    try {
-      await apiClient.patch('/family/profile', { relationship: rel });
-    } catch {
-      // Best-effort update
+  const handleAddMember = () => {
+    if (!newMemberName.trim()) {
+      Alert.alert('અધૂરી વિગત', 'કૃપા કરીને સભ્યનું નામ લખો.');
+      return;
     }
+
+    addFamilyMember({
+      name: newMemberName.trim(),
+      kinship: newMemberKinship,
+      callName: `${newMemberCall} ${newMemberName.trim()}`,
+      avatarEmoji: '👤',
+      notes: 'કૌટુંબિક સભ્ય',
+    });
+
+    setNewMemberName('');
+    setShowAddMemberModal(false);
+    Alert.alert('સફળતા', `${newMemberName} પરિવાર મંડળમાં ઉમેરાઈ ગયા છે!`);
   };
 
-  const handleIngestTranscript = async () => {
+  const handleIngestNotes = async () => {
     if (!transcriptText.trim()) {
-      Alert.alert('Required', 'Please enter transcript text or family notes.');
+      Alert.alert('અધૂરી વિગત', 'કૃપા કરીને જૂની વાત કે પ્રસંગની વિગત લખો.');
       return;
     }
-    const sourceDesc = transcriptSource.trim() || 'કૌટુંબિક વાતચીત (Family Notes)';
-    setIsIngestingTranscript(true);
-    setTranscriptResult(null);
 
-    try {
-      const res = await apiClient.post<{ message: string; result: { insertedCount: number } }>(
-        '/family/transcripts/ingest',
-        {
-          rawText: transcriptText,
-          sourceDescription: sourceDesc,
-          autoApprove: false,
-        }
-      );
-      setTranscriptResult(`✅ ${res.message} Review them in Yaadein (Memories).`);
-      setTranscriptText('');
-      setTranscriptSource('');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Ingestion failed.';
-      setTranscriptResult(`❌ ${msg}`);
-    } finally {
-      setIsIngestingTranscript(false);
-    }
-  };
-
-  const uploadFile = async (uri: string, name: string, type: string) => {
-    setIsUploading(true);
-    setUploadStatus(null);
-    try {
-      const formData = new FormData();
-      formData.append('file', { uri, name, type } as unknown as Blob);
-
-      await apiClient.uploadFormData('/media', formData);
-      setUploadStatus('✅ Uploaded successfully. Stored in your private family vault.');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Upload failed. Check your connection.';
-      setUploadStatus(`❌ ${msg}`);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const pickPhoto = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please allow photo access to upload family photographs.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.9,
+    const title = transcriptTopic.trim() || 'કૌટુંબિક વાતચીતમાંથી નોંધેલી યાદ';
+    await createMemory({
+      title,
+      content: transcriptText.trim(),
+      category: 'PERSONAL',
+      contributedBy: `${activeMember.name} (${activeMember.kinship})`,
+      sourceDescription: 'પરિવાર ડાયરી નોંધ',
+      impactOnPersona: 'માઁ વાતચીતમાં આ કૌટુંબિક પ્રસંગનો ઉલ્લેખ કરશે.',
+      familyApproved: true,
     });
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      await uploadFile(asset.uri, asset.fileName || 'photo.jpg', asset.mimeType || 'image/jpeg');
-    }
-  };
 
-  const pickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['audio/*', 'video/*', 'application/pdf'],
-      copyToCacheDirectory: true,
-    });
-    if (!result.canceled && result.assets[0]) {
-      const asset = result.assets[0];
-      await uploadFile(asset.uri, asset.name, asset.mimeType || 'audio/mpeg');
-    }
+    setTranscriptText('');
+    setTranscriptTopic('');
+    setIngestSuccess(true);
+    setTimeout(() => setIngestSuccess(false), 4000);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>🖼 Family Setup</Text>
-        <Text style={styles.subtitle}>Configure your connection and add family materials</Text>
-
-        {/* Relationship */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Your Relationship</Text>
-          <Text style={styles.sectionDesc}>
-            How are you related to your grandmother? This helps personalise how she addresses you.
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Banner */}
+        <View style={styles.headerCard}>
+          <View style={styles.headerTitleRow}>
+            <Users size={24} color={Colors.primary} />
+            <Text style={styles.headerTitle}>
+              {user?.familyName || 'રાણા પરિવાર (Rana Household)'}
+            </Text>
+          </View>
+          <Text style={styles.headerDesc}>
+            દરેક સભ્ય પોતાની ઓળખ સાથે દાદીમા સાથે અંગત વાતચીત કરી શકે છે અને સ્મૃતિઓ ઉમેરી શકે છે.
           </Text>
-          <View style={styles.chipGrid}>
-            {RELATIONSHIPS.map(r => (
+        </View>
+
+        {/* Family Members Section */}
+        <View style={styles.sectionHeaderRow}>
+          <View>
+            <Text style={styles.sectionTitle}>કુટુંબના સભ્યો ({familyMembers.length})</Text>
+            <Text style={styles.sectionSubtitle}>
+              વાત કરવા માટે સભ્ય પર ટેપ કરો
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.addMemberBtn}
+            onPress={() => setShowAddMemberModal(true)}
+            activeOpacity={0.8}
+          >
+            <UserPlus size={14} color="#FFFFFF" strokeWidth={2.4} style={{ marginRight: 4 }} />
+            <Text style={styles.addMemberBtnText}>સભ્ય ઉમેરો</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Member Cards */}
+        <View style={styles.membersGrid}>
+          {familyMembers.map((m) => {
+            const isActive = m.id === activeMember.id;
+            return (
               <TouchableOpacity
-                key={r}
-                style={[styles.chip, relationship === r && styles.chipActive]}
-                onPress={() => handleSelectRelationship(r)}
+                key={m.id}
+                style={[styles.memberCard, isActive && styles.memberCardActive]}
+                onPress={() => setActiveMember(m.id)}
+                activeOpacity={0.85}
               >
-                <Text style={[styles.chipText, relationship === r && styles.chipTextActive]}>
-                  {r}
-                </Text>
+                <View style={styles.memberCardTop}>
+                  <View style={[styles.avatarCircle, isActive && styles.avatarCircleActive]}>
+                    <User size={22} color={isActive ? Colors.primary : Colors.textMuted} />
+                  </View>
+                  {isActive && (
+                    <View style={styles.activeSpeakerBadge}>
+                      <CheckCircle2 size={13} color={Colors.success} style={{ marginRight: 4 }} />
+                      <Text style={styles.activeSpeakerText}>હાલમાં સક્રિય</Text>
+                    </View>
+                  )}
+                </View>
+
+                <Text style={styles.memberCardName}>{m.name}</Text>
+                <Text style={styles.memberCardKinship}>{m.kinship}</Text>
+
+                <View style={styles.memberCallBox}>
+                  <Quote size={12} color={Colors.textGold} style={{ marginRight: 4 }} />
+                  <Text style={styles.memberCallLabel}>માઁ નું સંબોધન:</Text>
+                  <Text style={styles.memberCallValue}>"{m.callName}"</Text>
+                </View>
               </TouchableOpacity>
-            ))}
-          </View>
+            );
+          })}
         </View>
 
-        {/* Media Upload */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Upload Family Materials</Text>
-          <Text style={styles.sectionDesc}>
-            All files are stored privately. They will be used to help the AI reflect her
-            personality and voice. No files are made public or shared without your knowledge.
-          </Text>
-
-          <View style={styles.uploadCard}>
-            <Text style={styles.uploadCardTitle}>📷 Photographs</Text>
-            <Text style={styles.uploadCardDesc}>
-              Upload clear photographs of your grandmother. These will be used for the portrait display.
-            </Text>
-            <TouchableOpacity
-              style={[styles.uploadButton, isUploading && styles.uploadButtonDisabled]}
-              onPress={pickPhoto}
-              disabled={isUploading}
-            >
-              <Text style={styles.uploadButtonText}>Select Photo</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.uploadCard}>
-            <Text style={styles.uploadCardTitle}>🎙 Audio / Video Recordings</Text>
-            <Text style={styles.uploadCardDesc}>
-              Recordings of her voice will be transcribed, used to build her dialect profile,
-              and (if family and provider consent is obtained) used to recreate her voice.
-            </Text>
-            <TouchableOpacity
-              style={[styles.uploadButton, isUploading && styles.uploadButtonDisabled]}
-              onPress={pickDocument}
-              disabled={isUploading}
-            >
-              <Text style={styles.uploadButtonText}>Select Recording</Text>
-            </TouchableOpacity>
-          </View>
-
-          {isUploading && (
-            <View style={styles.uploadStatus}>
-              <ActivityIndicator color={Colors.primary} />
-              <Text style={styles.uploadStatusText}>Uploading...</Text>
+        {/* Transcript / Story Ingestion Section */}
+        <View style={styles.ingestCard}>
+          <View style={styles.ingestHeaderRow}>
+            <View style={styles.ingestIconCircle}>
+              <FileText size={22} color={Colors.primary} />
             </View>
-          )}
-
-          {uploadStatus && (
-            <View style={styles.uploadStatus}>
-              <Text style={styles.uploadStatusText}>{uploadStatus}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.ingestTitle}>જૂની વાતો / કેસેટ નોંધ ઉમેરો</Text>
+              <Text style={styles.ingestSubtitle}>
+                દાદીમાના ભૂતકાળના પ્રસંગો કે વાતો અહીં લખો — AI આપમેળે વ્યક્તિત્વમાં વણી લેશે.
+              </Text>
             </View>
-          )}
-        </View>
-
-        {/* Transcript & Notes Ingestion */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📝 Import Transcripts & Family Stories</Text>
-          <Text style={styles.sectionDesc}>
-            Paste verified transcripts from home cassette tapes, video recordings, or oral history notes.
-            The system categorizes them into verified facts, personal stories, and personality traits.
-          </Text>
-
-          <View style={styles.uploadCard}>
-            <Text style={styles.label}>Source Label / Context</Text>
-            <TextInput
-              style={styles.textInputShort}
-              value={transcriptSource}
-              onChangeText={setTranscriptSource}
-              placeholder="e.g. 1998 Diwali Cassette / Audio Recording from Rajkot"
-              placeholderTextColor={Colors.textMuted}
-            />
-
-            <Text style={[styles.label, { marginTop: Spacing.sm }]}>Transcript or Memories (Gujarati or English)</Text>
-            <TextInput
-              style={styles.textInputArea}
-              value={transcriptText}
-              onChangeText={setTranscriptText}
-              placeholder="લખો અથવા પેસ્ટ કરો (Paste verified quotes, life stories, or facts)..."
-              placeholderTextColor={Colors.textMuted}
-              multiline
-              numberOfLines={4}
-            />
-
-            <TouchableOpacity
-              style={[styles.uploadButton, (isIngestingTranscript || !transcriptText.trim()) && styles.uploadButtonDisabled]}
-              onPress={handleIngestTranscript}
-              disabled={isIngestingTranscript || !transcriptText.trim()}
-            >
-              {isIngestingTranscript ? (
-                <ActivityIndicator color={Colors.textOnPrimary} />
-              ) : (
-                <Text style={styles.uploadButtonText}>Ingest & Structure Memories</Text>
-              )}
-            </TouchableOpacity>
-
-            {transcriptResult && (
-              <View style={styles.uploadStatus}>
-                <Text style={styles.uploadStatusText}>{transcriptResult}</Text>
-              </View>
-            )}
           </View>
+
+          <TextInput
+            style={styles.ingestTopicInput}
+            placeholder="પ્રસંગનું નામ (દા.ત. ગોંડલના ઘરની રીતભાત)"
+            placeholderTextColor={Colors.textMuted}
+            value={transcriptTopic}
+            onChangeText={setTranscriptTopic}
+          />
+
+          <TextInput
+            style={styles.ingestTextInput}
+            placeholder="દાદીમા શું કહેતા હતા, કેવો પ્રસંગ બન્યો હતો..."
+            placeholderTextColor={Colors.textMuted}
+            value={transcriptText}
+            onChangeText={setTranscriptText}
+            multiline
+            numberOfLines={4}
+          />
+
+          {ingestSuccess ? (
+            <View style={styles.successPill}>
+              <ShieldCheck size={14} color={Colors.success} style={{ marginRight: 4 }} />
+              <Text style={styles.successPillText}>સ્મૃતિ ખજાનામાં સફળતાપૂર્વક ઉમેરાઈ ગઈ!</Text>
+            </View>
+          ) : null}
+
+          <TouchableOpacity
+            style={styles.ingestSaveButton}
+            onPress={handleIngestNotes}
+            activeOpacity={0.85}
+          >
+            <Sparkles size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+            <Text style={styles.ingestSaveButtonText}>
+              યાદ સાચવો ({activeMember.name} તરીકે)
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Privacy note */}
-        <View style={styles.privacyNote}>
-          <Text style={styles.privacyNoteTitle}>🔒 Privacy</Text>
-          <Text style={styles.privacyNoteText}>
-            Uploaded files are stored on a private server. They are never publicly accessible.
-            You can delete any file from this app at any time. See Settings for full data controls.
-          </Text>
-        </View>
+        <View style={{ height: 30 }} />
       </ScrollView>
+
+      {/* Add Member Modal */}
+      <Modal
+        visible={showAddMemberModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowAddMemberModal(false)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <UserPlus size={20} color={Colors.primary} />
+                <Text style={styles.modalHeaderTitle}>નવો પરિવાર સભ્ય ઉમેરો</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowAddMemberModal(false)}>
+                <X size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={styles.modalInputLabel}>સભ્યનું નામ (Name)</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="દા.ત. અલ્પા, જયદીપ, કાવ્યા"
+                placeholderTextColor={Colors.textMuted}
+                value={newMemberName}
+                onChangeText={setNewMemberName}
+              />
+
+              <Text style={styles.modalInputLabel}>દાદીમા સાથે સગપણ (Kinship)</Text>
+              <View style={styles.kinshipSelectionContainer}>
+                {KINSHIP_SUGGESTIONS.map((k) => {
+                  const isSelected = newMemberKinship === k.label;
+                  return (
+                    <TouchableOpacity
+                      key={k.label}
+                      style={[styles.kinshipChip, isSelected && styles.kinshipChipActive]}
+                      onPress={() => {
+                        setNewMemberKinship(k.label);
+                        setNewMemberCall(k.call);
+                      }}
+                    >
+                      <Text style={[styles.kinshipChipText, isSelected && styles.kinshipChipTextActive]}>
+                        {k.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.modalInputLabel}>માઁ નું સંબોધન (Call Name Prefix)</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="દિકરા, ભાઈ, વહુ બેટા, દીકરી..."
+                placeholderTextColor={Colors.textMuted}
+                value={newMemberCall}
+                onChangeText={setNewMemberCall}
+              />
+
+              <TouchableOpacity
+                style={styles.saveMemberBtn}
+                onPress={handleAddMember}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.saveMemberBtnText}>પરિવારમાં સામેલ કરો</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: { padding: Spacing.md, paddingTop: Spacing.lg, paddingBottom: Spacing['3xl'] },
-  title: {
-    fontSize: Typography.fontSize.xl,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.textPrimary,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
   },
-  subtitle: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textMuted,
-    marginTop: 4,
-    marginBottom: Spacing.lg,
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 30,
   },
-  section: {
-    marginBottom: Spacing.lg,
+  headerCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: Colors.borderGold,
+    marginBottom: 20,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: Colors.primary,
+  },
+  headerDesc: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    lineHeight: 19,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semibold,
+    fontSize: 17,
+    fontWeight: '800',
     color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
   },
-  sectionDesc: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    lineHeight: 20,
-    marginBottom: Spacing.md,
+  sectionSubtitle: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    marginTop: 1,
   },
-  chipGrid: {
+  addMemberBtn: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.xs,
+    alignItems: 'center',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
   },
-  chip: {
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    backgroundColor: Colors.backgroundCard,
+  addMemberBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  membersGrid: {
+    gap: 12,
+    marginBottom: 24,
+  },
+  memberCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  memberCardActive: {
+    borderColor: Colors.secondary,
+    backgroundColor: '#FFFDF7',
+    borderWidth: 2,
+  },
+  memberCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  avatarCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FAF5EE',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  chipActive: {
+  avatarCircleActive: {
+    backgroundColor: '#FFF4D6',
+    borderColor: Colors.borderGold,
+  },
+  activeSpeakerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E7F2EB',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  activeSpeakerText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.success,
+  },
+  memberCardName: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: Colors.textPrimary,
+  },
+  memberCardKinship: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  memberCallBox: {
+    backgroundColor: '#FAF5EE',
+    padding: 8,
+    borderRadius: 10,
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  memberCallLabel: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontWeight: '700',
+    marginRight: 4,
+  },
+  memberCallValue: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.primary,
+    fontStyle: 'italic',
+  },
+  ingestCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: Colors.borderGold,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  ingestHeaderRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  ingestIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFF4D6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Colors.borderGold,
+  },
+  ingestTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.primary,
+  },
+  ingestSubtitle: {
+    fontSize: 12,
+    color: Colors.textMuted,
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  ingestTopicInput: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    fontSize: 14,
+    color: Colors.textPrimary,
+    marginBottom: 10,
+  },
+  ingestTextInput: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: Colors.textPrimary,
+    height: 80,
+    textAlignVertical: 'top',
+    marginBottom: 10,
+  },
+  successPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E7F2EB',
+    padding: 8,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  successPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.success,
+  },
+  ingestSaveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.primary,
+    borderRadius: 14,
+    paddingVertical: 12,
+  },
+  ingestSaveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(31, 18, 12, 0.65)',
+    justifyContent: 'flex-end',
+  },
+  modalCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 20,
+    maxHeight: '88%',
+    borderWidth: 1.5,
+    borderColor: Colors.borderGold,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  modalHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Colors.primary,
+  },
+  modalInputLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: 6,
+    marginTop: 8,
+  },
+  modalInput: {
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  kinshipSelectionContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginVertical: 4,
+  },
+  kinshipChip: {
+    backgroundColor: '#F5ECE3',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  kinshipChipActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
-  chipText: {
-    fontSize: Typography.fontSize.sm,
+  kinshipChipText: {
+    fontSize: 12,
+    fontWeight: '600',
     color: Colors.textSecondary,
   },
-  chipTextActive: {
-    color: Colors.textOnPrimary,
-    fontWeight: Typography.fontWeight.semibold,
+  kinshipChipTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
-  uploadCard: {
-    backgroundColor: Colors.backgroundCard,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  uploadCardTitle: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.textPrimary,
-    marginBottom: 4,
-  },
-  uploadCardDesc: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    lineHeight: 19,
-    marginBottom: Spacing.md,
-  },
-  uploadButton: {
+  saveMemberBtn: {
     backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
+    borderRadius: 14,
+    paddingVertical: 14,
     alignItems: 'center',
+    marginTop: 18,
+    marginBottom: 20,
   },
-  uploadButtonDisabled: { opacity: 0.5 },
-  uploadButtonText: {
-    color: Colors.textOnPrimary,
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
-  },
-  uploadStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    padding: Spacing.sm,
-  },
-  uploadStatusText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-  },
-  privacyNote: {
-    backgroundColor: '#F0F7FF',
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#C5DAEE',
-  },
-  privacyNoteTitle: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.textPrimary,
-    marginBottom: 4,
-  },
-  privacyNoteText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    lineHeight: 19,
-  },
-  label: {
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-  },
-  textInputShort: {
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textPrimary,
-  },
-  textInputArea: {
-    backgroundColor: Colors.background,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.sm,
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textPrimary,
-    minHeight: 90,
-    textAlignVertical: 'top',
-    marginBottom: Spacing.md,
+  saveMemberBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
   },
 });

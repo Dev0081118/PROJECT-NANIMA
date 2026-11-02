@@ -5,13 +5,22 @@ import {
 import { Colors } from '../../constants/Colors';
 import { Typography, Spacing, BorderRadius } from '../../constants/Typography';
 import { Memory } from '../../stores/memory';
+import {
+  ChevronDown,
+  ChevronUp,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  AlertTriangle,
+  Trash2,
+} from 'lucide-react-native';
 
 const CATEGORY_LABELS: Record<string, string> = {
-  BIOGRAPHICAL: '📋 Fact',
-  PERSONAL: '💬 Story',
-  PERSONALITY: '🌟 Trait',
-  VALUES: '💡 Value',
-  UNCERTAIN: '❓ Uncertain',
+  BIOGRAPHICAL: 'જીવનચરિત્ર (Fact)',
+  PERSONAL: 'વાર્તા (Story)',
+  PERSONALITY: 'સ્વભાવ (Trait)',
+  VALUES: 'મૂલ્યો (Value)',
+  UNCERTAIN: 'અનિશ્ચિત (Uncertain)',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -34,11 +43,11 @@ export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
 
   const confirmDelete = () => {
     Alert.alert(
-      'Delete Memory?',
-      `"${memory.title}" will be permanently deleted and removed from AI context.`,
+      'સ્મૃતિ કાઢી નાખો?',
+      `"${memory.title}" ને કાયમી માટે દૂર કરવામાં આવશે.`,
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: onDelete },
+        { text: 'રદ કરો', style: 'cancel' },
+        { text: 'કાઢી નાખો', style: 'destructive', onPress: onDelete },
       ]
     );
   };
@@ -46,7 +55,7 @@ export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
   return (
     <View style={styles.card}>
       {/* Header */}
-      <TouchableOpacity onPress={() => setExpanded(v => !v)} style={styles.header}>
+      <TouchableOpacity onPress={() => setExpanded(v => !v)} style={styles.header} activeOpacity={0.8}>
         <View style={styles.headerLeft}>
           <View style={[styles.badge, { backgroundColor: CATEGORY_COLORS[memory.category] + '22' }]}>
             <Text style={[styles.badgeText, { color: CATEGORY_COLORS[memory.category] }]}>
@@ -57,7 +66,11 @@ export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
             {memory.title}
           </Text>
         </View>
-        <Text style={styles.expand}>{expanded ? '▲' : '▼'}</Text>
+        {expanded ? (
+          <ChevronUp size={18} color={Colors.textMuted} />
+        ) : (
+          <ChevronDown size={18} color={Colors.textMuted} />
+        )}
       </TouchableOpacity>
 
       {/* Expanded content */}
@@ -67,7 +80,7 @@ export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
 
           {memory.transcriptExcerpt && (
             <View style={styles.transcriptBox}>
-              <Text style={styles.transcriptLabel}>Source transcript:</Text>
+              <Text style={styles.transcriptLabel}>સંદર્ભ નોંધ:</Text>
               <Text style={styles.transcriptText} numberOfLines={3}>
                 "{memory.transcriptExcerpt}"
               </Text>
@@ -75,38 +88,50 @@ export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
           )}
 
           {memory.sourceDescription && (
-            <Text style={styles.source}>Source: {memory.sourceDescription}</Text>
+            <Text style={styles.source}>સ્ત્રોત: {memory.sourceDescription}</Text>
           )}
 
           {/* Status + Actions */}
           <View style={styles.footer}>
             <View style={styles.statusRow}>
               {memory.familyApproved ? (
-                <Text style={styles.approved}>✅ Approved for AI</Text>
+                <View style={styles.approvedRow}>
+                  <CheckCircle2 size={13} color={Colors.success} style={{ marginRight: 4 }} />
+                  <Text style={styles.approved}>પરિવાર દ્વારા મંજૂર (Approved)</Text>
+                </View>
               ) : (
-                <Text style={styles.pending}>⏳ Awaiting approval</Text>
+                <View style={styles.pendingRow}>
+                  <Clock size={13} color={Colors.secondary} style={{ marginRight: 4 }} />
+                  <Text style={styles.pending}>ચકાસણી બાકી</Text>
+                </View>
               )}
               {memory.verificationStatus === 'REJECTED' && (
-                <Text style={styles.rejected}>❌ Rejected</Text>
+                <View style={styles.rejectedRow}>
+                  <XCircle size={13} color={Colors.error} style={{ marginRight: 4 }} />
+                  <Text style={styles.rejected}>અસ્વીકાર</Text>
+                </View>
               )}
               {memory.category === 'UNCERTAIN' && (
-                <Text style={styles.uncertainLabel}>⚠️ Not shown in AI context automatically</Text>
+                <View style={styles.uncertainRow}>
+                  <AlertTriangle size={13} color={Colors.uncertain} style={{ marginRight: 4 }} />
+                  <Text style={styles.uncertainLabel}>ચકાસણી વગર વાપરવામાં આવશે નહીં</Text>
+                </View>
               )}
             </View>
 
             <View style={styles.actions}>
               {!memory.familyApproved && memory.verificationStatus !== 'REJECTED' && (
                 <TouchableOpacity style={styles.approveBtn} onPress={onApprove}>
-                  <Text style={styles.approveBtnText}>Approve</Text>
+                  <Text style={styles.approveBtnText}>મંજૂર કરો</Text>
                 </TouchableOpacity>
               )}
               {memory.familyApproved && (
                 <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
-                  <Text style={styles.rejectBtnText}>Revoke</Text>
+                  <Text style={styles.rejectBtnText}>રદ કરો</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity style={styles.deleteBtn} onPress={confirmDelete}>
-                <Text style={styles.deleteBtnText}>Delete</Text>
+                <Trash2 size={15} color={Colors.error} />
               </TouchableOpacity>
             </View>
           </View>
@@ -118,91 +143,156 @@ export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.backgroundCard,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: Colors.borderGold,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
-  headerLeft: { flex: 1, gap: 4 },
+  headerLeft: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   badge: {
-    alignSelf: 'flex-start',
-    borderRadius: BorderRadius.full,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   badgeText: {
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.semibold,
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
   },
   title: {
-    fontSize: Typography.fontSize.base,
-    fontWeight: Typography.fontWeight.medium,
+    fontSize: 15,
+    fontWeight: '800',
     color: Colors.textPrimary,
     flex: 1,
   },
-  expand: { color: Colors.textMuted, fontSize: 12, marginLeft: Spacing.xs },
   content: {
-    fontSize: Typography.fontSize.sm,
+    fontSize: 14,
     color: Colors.textSecondary,
-    lineHeight: 20,
-    marginTop: Spacing.sm,
+    lineHeight: 21,
+    marginTop: 12,
+    marginBottom: 8,
   },
   transcriptBox: {
-    backgroundColor: Colors.background,
-    borderRadius: BorderRadius.sm,
-    padding: Spacing.sm,
-    marginTop: Spacing.sm,
-    borderLeftWidth: 2,
-    borderLeftColor: Colors.secondary,
+    backgroundColor: '#FFF8E7',
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: Colors.borderGold,
   },
   transcriptLabel: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.textMuted,
+    fontSize: 11,
+    color: Colors.textGold,
+    fontWeight: '700',
     marginBottom: 2,
   },
   transcriptText: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
+    fontSize: 13,
+    color: Colors.primary,
     fontStyle: 'italic',
-    lineHeight: 19,
   },
   source: {
-    fontSize: Typography.fontSize.xs,
+    fontSize: 11,
     color: Colors.textMuted,
-    marginTop: Spacing.xs,
+    marginTop: 4,
   },
-  footer: { marginTop: Spacing.md, gap: Spacing.xs },
-  statusRow: { gap: 4 },
-  approved: { fontSize: Typography.fontSize.xs, color: Colors.verified },
-  pending: { fontSize: Typography.fontSize.xs, color: Colors.pending },
-  rejected: { fontSize: Typography.fontSize.xs, color: Colors.rejected },
-  uncertainLabel: { fontSize: Typography.fontSize.xs, color: Colors.uncertain },
-  actions: { flexDirection: 'row', gap: Spacing.xs, marginTop: 4 },
+  footer: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: Colors.divider,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  statusRow: {
+    flex: 1,
+    gap: 4,
+  },
+  approvedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  approved: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.success,
+  },
+  pendingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  pending: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.secondary,
+  },
+  rejectedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rejected: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.error,
+  },
+  uncertainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  uncertainLabel: {
+    fontSize: 11,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   approveBtn: {
-    backgroundColor: Colors.success + '22',
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    backgroundColor: Colors.success,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
-  approveBtnText: { fontSize: Typography.fontSize.xs, color: Colors.success, fontWeight: '600' },
+  approveBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   rejectBtn: {
-    backgroundColor: Colors.warning + '22',
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    backgroundColor: '#FAF5EE',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
   },
-  rejectBtnText: { fontSize: Typography.fontSize.xs, color: Colors.warning, fontWeight: '600' },
+  rejectBtnText: {
+    color: Colors.textMuted,
+    fontSize: 12,
+  },
   deleteBtn: {
-    backgroundColor: Colors.error + '18',
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    padding: 6,
   },
-  deleteBtnText: { fontSize: Typography.fontSize.xs, color: Colors.error, fontWeight: '600' },
 });

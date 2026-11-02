@@ -1,5 +1,21 @@
 import '@testing-library/jest-native/extend-expect';
 
+jest.mock('lucide-react-native', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return new Proxy(
+    {},
+    {
+      get: (_target, prop) => {
+        const IconComponent = (props: any) =>
+          React.createElement(View, { testID: `icon-${String(prop)}`, ...props });
+        IconComponent.displayName = String(prop);
+        return IconComponent;
+      },
+    }
+  );
+});
+
 jest.mock('expo-audio', () => ({
   requestRecordingPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted', granted: true }),
   setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
