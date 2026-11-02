@@ -1,71 +1,69 @@
 /**
- * Maa Design System — Royal Heirloom Keepsake Palette
+ * Maa Design System — Apple-Inspired Quiet Luxury Palette
  *
- * Inspired by traditional Kathiyawadi Gujarati heritage:
- * - Rich Patola Crimson & Deep Sindoor
- * - Warm Antique Haldi Gold & Burnished Brass
- * - Handmade Sandalwood Paper & Pure Linen Cream
- * - Terracotta Mitti & Peacock Chhatri Green
+ * Principles:
+ * - Content over containers, minimalism over decoration.
+ * - Warm soft ivory / neutral canvas with deep charcoal typography.
+ * - Subtle muted sage and restrained warm stone accents.
+ * - Sub-pixel hairline borders and airy whitespace instead of heavy cards.
  */
 export const Colors = {
-  // Primary palette — Royal Crimson Silk
-  primary: '#731828',          // Deep royal crimson
-  primaryLight: '#9E2A3E',     // Vibrant crimson silk
-  primaryDark: '#4A0C17',      // Deep velvet mahogany
-  primaryVery: '#FCECEF',      // Soft rose silk tint
+  // Brand & Accent — Restrained Forest Sage / Deep Charcoal
+  primary: '#1C1C1E',          // Apple System Deep Charcoal
+  primaryLight: '#2C2C2E',     // Soft Charcoal
+  primaryDark: '#000000',      // Pure Black
+  primaryVery: '#F2F2F7',      // iOS Grouped Background
 
-  // Heritage Gold — Haldi & Brass
-  secondary: '#B8860B',        // Rich dark goldenrod
-  secondaryLight: '#E8C766',   // Radiant antique gold
-  secondaryDark: '#855E04',    // Burnished temple brass
-  goldAccent: '#D4AF37',       // Pure royal gold foil
+  // Quiet Luxury Sage & Stone Accents
+  secondary: '#4A6B5D',        // Muted Sage
+  secondaryLight: '#EBF1EE',   // Sage Tint
+  secondaryDark: '#2F453B',    // Deep Sage
+  goldAccent: '#6E6E73',       // Subdued Slate
 
-  // Backgrounds — Sandalwood Paper & Linen
-  background: '#FAF6F0',       // Warm royal parchment
-  backgroundCard: '#FFFFFF',   // Pure clean white card
-  backgroundElevated: '#FFFDF9',// Subtle warm sheen
+  // Backgrounds — Apple System Warm Canvas
+  background: '#FAF9F6',       // Soft Ivory / Warm White
+  backgroundCard: '#FFFFFF',   // Pure White Surface
+  backgroundElevated: '#FFFFFF',
   backgroundModal: '#FFFFFF',
-  surfaceSoft: '#F5ECE3',      // Soft beige clay container
+  surfaceSoft: '#F2F2F7',      // Apple Secondary Grouped Fill
 
-  // Text — Charcoal Walnut & Spiced Cinnamon
-  textPrimary: '#1F120C',      // Deep ink walnut
-  textSecondary: '#4A2E20',    // Warm cinnamon brown
-  textMuted: '#7D6050',        // Sandalwood muted tone
-  textOnPrimary: '#FFFFFF',    // Crisp white on crimson
-  textOnDark: '#FAF6F0',
-  textGold: '#996515',        // Gold accent text
+  // Typography Hierarchy — Apple San Francisco Standards
+  textPrimary: '#1C1C1E',      // Primary Label
+  textSecondary: '#636366',    // Secondary Label
+  textMuted: '#8E8E93',        // Tertiary Label / Placeholder
+  textOnPrimary: '#FFFFFF',    // Pure White on Black
+  textOnDark: '#FFFFFF',
+  textGold: '#4A6B5D',         // Sage accent label
 
-  // Cultural Accents
-  clay: '#B85429',             // Kathiyawadi terracotta mitti
-  emerald: '#235D43',          // Peacock chhatri emerald
-  saffron: '#D97706',          // Kesari saffron
+  // Cultural & Status Tones — Restrained & Accessible
+  clay: '#5C554E',
+  emerald: '#3A5A4A',
+  saffron: '#7A6044',
+  success: '#34C759',          // Apple System Green
+  warning: '#FF9500',          // Apple System Orange
+  error: '#FF3B30',            // Apple System Red
+  info: '#007AFF',             // Apple System Blue
 
-  // Status colours
-  success: '#2E6945',          // Deep forest green
-  warning: '#B8860B',          // Warm temple gold
-  error: '#9E2424',            // Crimson alert
-  info: '#2B5784',             // Royal twilight blue
+  // Hairline Borders & Dividers
+  border: '#E5E5EA',           // Apple System Separator
+  borderFocus: '#1C1C1E',
+  borderGold: '#E5E5EA',       // Clean Hairline Neutral
+  divider: '#E5E5EA',          // Apple Hairline Divider
+  shadow: 'rgba(0, 0, 0, 0.03)',
+  shadowHeavy: 'rgba(0, 0, 0, 0.06)',
 
-  // UI Elements & Borders
-  border: '#E8DCCF',           // Elegant warm border
-  borderFocus: '#731828',      // Active focus crimson
-  borderGold: '#DFC082',       // Antique gold card trim
-  divider: '#EFE4D6',          // Soft ornamental line
-  shadow: 'rgba(31, 18, 12, 0.08)',
-  shadowHeavy: 'rgba(74, 12, 23, 0.16)',
+  // Conversation Bubbles — Natural & Editorial
+  userBubble: '#1C1C1E',       // Apple System Black
+  assistantBubble: '#FFFFFF',  // Crisp White Surface
+  assistantBubbleBorder: '#E5E5EA',
+  listeningIndicator: '#34C759',
+  speakingIndicator: '#1C1C1E',
 
-  // Conversation states
-  userBubble: '#EFE6DC',       // Family member message bubble
-  assistantBubble: '#FFFDF7',  // Maa blessing response bubble
-  assistantBubbleBorder: '#EED9B3',
-  listeningIndicator: '#2E6945',
-  speakingIndicator: '#731828',
-
-  // Verification badges
-  verified: '#235D43',
-  verifiedBg: '#E7F2EB',
-  pending: '#B8860B',
-  pendingBg: '#FBF4E2',
-  rejected: '#9E2424',
-  uncertain: '#B8860B',
+  // Verification & Tags
+  verified: '#34C759',
+  verifiedBg: '#EBF7EE',
+  pending: '#8E8E93',
+  pendingBg: '#F2F2F7',
+  rejected: '#FF3B30',
+  uncertain: '#8E8E93',
 };

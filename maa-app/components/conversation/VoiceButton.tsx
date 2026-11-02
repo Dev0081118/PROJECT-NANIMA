@@ -1,14 +1,18 @@
 /**
- * VoiceButton — Luxury Royal Microphone Action Button
+ * VoiceButton — Apple-Inspired Tactile Audio Control
  *
- * Uses Lucide icons (Mic, Volume2, RotateCw, AlertCircle) with smooth
- * pulsating concentric glow rings and responsive tactile feedback.
+ * Clean, minimalist circular control with subtle feedback:
+ * - Idle / Ready: Deep charcoal (#1C1C1E) with white Mic
+ * - Listening: Muted sage (#4A6B5D) with recording pulse
+ * - Speaking: Charcoal with Volume2 / Square to pause
+ * - Error: Restrained muted red
  */
 import React, { useRef, useEffect } from 'react';
 import {
   TouchableOpacity, StyleSheet, Text, Animated, View,
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
+import { Typography, Spacing } from '../../constants/Typography';
 import {
   Mic,
   Volume2,
@@ -27,66 +31,53 @@ interface Props {
 
 export function VoiceButton({ status, onPress, disabled }: Props) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
-  const ringScaleAnim = useRef(new Animated.Value(1)).current;
-  const ringOpacityAnim = useRef(new Animated.Value(0)).current;
+  const auraAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (status === 'listening') {
       Animated.loop(
         Animated.parallel([
           Animated.sequence([
-            Animated.timing(scaleAnim, { toValue: 1.08, duration: 600, useNativeDriver: true }),
+            Animated.timing(scaleAnim, { toValue: 1.05, duration: 600, useNativeDriver: true }),
             Animated.timing(scaleAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
           ]),
           Animated.sequence([
-            Animated.timing(ringScaleAnim, { toValue: 1.45, duration: 900, useNativeDriver: true }),
-            Animated.timing(ringScaleAnim, { toValue: 1, duration: 0, useNativeDriver: true }),
+            Animated.timing(auraAnim, { toValue: 0.35, duration: 600, useNativeDriver: true }),
+            Animated.timing(auraAnim, { toValue: 0.1, duration: 600, useNativeDriver: true }),
           ]),
-          Animated.sequence([
-            Animated.timing(ringOpacityAnim, { toValue: 0.5, duration: 200, useNativeDriver: true }),
-            Animated.timing(ringOpacityAnim, { toValue: 0, duration: 700, useNativeDriver: true }),
-          ]),
-        ])
-      ).start();
-    } else if (status === 'speaking') {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(scaleAnim, { toValue: 1.04, duration: 400, useNativeDriver: true }),
-          Animated.timing(scaleAnim, { toValue: 0.98, duration: 400, useNativeDriver: true }),
         ])
       ).start();
     } else {
       scaleAnim.stopAnimation();
-      ringScaleAnim.stopAnimation();
-      ringOpacityAnim.stopAnimation();
+      auraAnim.stopAnimation();
       Animated.timing(scaleAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
-      Animated.timing(ringOpacityAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+      Animated.timing(auraAnim, { toValue: 0, duration: 200, useNativeDriver: true }).start();
     }
   }, [status]);
 
   const buttonColor =
-    status === 'listening' ? '#235D43' :
+    status === 'listening' ? Colors.secondary :
     status === 'speaking' ? Colors.primary :
-    status === 'processing' ? Colors.secondary :
+    status === 'processing' ? Colors.textSecondary :
     status === 'error' ? Colors.error :
     Colors.primary;
 
   const hintText =
-    status === 'listening' ? 'વહાલથી સાંભળી રહ્યા છીએ... ટેપ કરી અટકાવો' :
-    status === 'processing' ? 'સ્મૃતિઓ યાદ કરી રહ્યા છે...' :
+    status === 'listening' ? 'સાંભળી રહ્યા છીએ • ટેપ કરી પૂર્ણ કરો' :
+    status === 'processing' ? 'યાદ કરી રહ્યા છે...' :
     status === 'speaking' ? 'માઁ બોલી રહ્યા છે • ટેપ કરી અટકાવો' :
-    'માઇક પર ટેપ કરી બોલો અથવા નીચે સંદેશ લખો';
+    'બોલવા માટે માઇક દબાવો';
 
   return (
     <View style={styles.wrapper}>
-      {/* Outer pulsating glow ring */}
+      {/* Subtle listening ring */}
       <Animated.View
         style={[
-          styles.outerRing,
+          styles.listeningAura,
           {
             borderColor: buttonColor,
-            opacity: ringOpacityAnim,
-            transform: [{ scale: ringScaleAnim }],
+            opacity: auraAnim,
+            transform: [{ scale: scaleAnim }],
           },
         ]}
       />
@@ -96,24 +87,18 @@ export function VoiceButton({ status, onPress, disabled }: Props) {
           style={[
             styles.button,
             { backgroundColor: buttonColor },
-            disabled && { opacity: 0.6 },
+            disabled && { opacity: 0.5 },
           ]}
           onPress={onPress}
-          disabled={disabled}
-          activeOpacity={0.82}
-          accessibilityLabel={status === 'listening' ? 'Stop listening' : 'Start voice conversation'}
-          accessibilityRole="button"
+          disabled={disabled || status === 'processing'}
+          activeOpacity={0.8}
         >
-          {status === 'listening' ? (
-            <Square size={28} color="#FFFFFF" fill="#FFFFFF" />
-          ) : status === 'speaking' ? (
-            <Volume2 size={32} color="#FFFFFF" strokeWidth={2.4} />
-          ) : status === 'processing' ? (
-            <RotateCw size={28} color="#FFFFFF" strokeWidth={2.4} />
-          ) : status === 'error' ? (
-            <AlertCircle size={30} color="#FFFFFF" strokeWidth={2.4} />
-          ) : (
-            <Mic size={32} color="#FFFFFF" strokeWidth={2.4} />
+          {status === 'listening' && <Square size={20} color="#FFFFFF" fill="#FFFFFF" />}
+          {status === 'speaking' && <Square size={20} color="#FFFFFF" fill="#FFFFFF" />}
+          {status === 'processing' && <RotateCw size={22} color="#FFFFFF" />}
+          {status === 'error' && <AlertCircle size={22} color="#FFFFFF" />}
+          {(status === 'ready' || status === 'idle' || status === 'connecting') && (
+            <Mic size={24} color="#FFFFFF" strokeWidth={2} />
           )}
         </TouchableOpacity>
       </Animated.View>
@@ -126,35 +111,33 @@ export function VoiceButton({ status, onPress, disabled }: Props) {
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
-    gap: 8,
-    position: 'relative',
+    justifyContent: 'center',
+    paddingVertical: Spacing.xs,
   },
-  outerRing: {
+  listeningAura: {
     position: 'absolute',
-    top: -4,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
-  },
-  button: {
     width: 72,
     height: 72,
     borderRadius: 36,
+    borderWidth: 2,
+    top: 0,
+  },
+  button: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2.5,
-    borderColor: '#FFF8E7',
-    shadowColor: Colors.shadowHeavy,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 7,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
   },
   hint: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
-    fontWeight: '600',
-    textAlign: 'center',
+    marginTop: Spacing.sm,
+    fontWeight: Typography.fontWeight.medium,
   },
 });

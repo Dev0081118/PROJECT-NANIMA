@@ -1,36 +1,38 @@
 /**
- * Maa Design System — Typography
+ * Maa Design System — Apple Typography & Spacing System
  *
- * Using system fonts initially (Noto Sans Gujarati available on Android/iOS).
- * Custom font loading can be added for branded experience.
+ * Designed for authentic Gujarati script legibility and iOS design harmony:
+ * - Clean San Francisco system font scaling
+ * - Balanced Gujarati line heights for ligatures and vowels
+ * - Subtle neutral shadows and precise 8-point spatial grid
  */
 export const Typography = {
   // Font families
   fontFamily: {
-    sans: 'System',          // System default (supports Gujarati on Android/iOS)
-    serif: 'serif',
-    mono: 'monospace',
+    sans: 'System',          // System default (San Francisco / Noto Sans Gujarati)
+    serif: 'Georgia',
+    mono: 'Courier',
   },
 
-  // Font sizes (sp — scale-independent pixels)
+  // Font sizes (iOS scale)
   fontSize: {
-    xs: 12,
-    sm: 14,
-    base: 16,
-    md: 18,
-    lg: 20,
-    xl: 24,
-    '2xl': 28,
-    '3xl': 34,
-    '4xl': 40,
+    xs: 11,                  // Caption 2
+    sm: 13,                  // Footnote
+    base: 15,                // Subhead
+    md: 17,                  // Body / Headline
+    lg: 20,                  // Title 3
+    xl: 22,                  // Title 2
+    '2xl': 28,               // Title 1
+    '3xl': 34,               // Large Title
+    '4xl': 40,               // Display
   },
 
   // Line heights
   lineHeight: {
-    tight: 1.2,
-    normal: 1.5,
-    relaxed: 1.75,   // Better for Gujarati script readability
-    loose: 2.0,
+    tight: 1.25,
+    normal: 1.45,
+    relaxed: 1.65,           // Optimal for Gujarati script diacritics
+    loose: 1.85,
   },
 
   // Font weights
@@ -43,10 +45,10 @@ export const Typography = {
 
   // Letter spacing
   letterSpacing: {
-    tight: -0.5,
+    tight: -0.4,
     normal: 0,
-    wide: 0.5,
-    wider: 1,
+    wide: 0.3,
+    wider: 0.6,
   },
 };
 
@@ -54,40 +56,41 @@ export const Spacing = {
   xs: 4,
   sm: 8,
   md: 16,
-  lg: 24,
-  xl: 32,
-  '2xl': 48,
-  '3xl': 64,
+  lg: 20,
+  xl: 24,
+  '2xl': 32,
+  '3xl': 44,
 };
 
 export const BorderRadius = {
-  sm: 6,
+  xs: 4,
+  sm: 8,
   md: 12,
   lg: 16,
-  xl: 24,
+  xl: 20,
   full: 9999,
 };
 
 export const Shadow = {
   sm: {
-    shadowColor: '#2C1810',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.04,
     shadowRadius: 3,
-    elevation: 2,
+    elevation: 1,
   },
   md: {
-    shadowColor: '#2C1810',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 2,
   },
   lg: {
-    shadowColor: '#2C1810',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.16,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
     shadowRadius: 16,
-    elevation: 8,
+    elevation: 4,
   },
 };

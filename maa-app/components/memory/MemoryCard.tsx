@@ -9,42 +9,33 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle2,
-  Clock,
-  XCircle,
-  AlertTriangle,
   Trash2,
+  Edit3,
 } from 'lucide-react-native';
 
-const CATEGORY_LABELS: Record<string, string> = {
-  BIOGRAPHICAL: 'જીવનચરિત્ર (Fact)',
-  PERSONAL: 'વાર્તા (Story)',
-  PERSONALITY: 'સ્વભાવ (Trait)',
-  VALUES: 'મૂલ્યો (Value)',
-  UNCERTAIN: 'અનિશ્ચિત (Uncertain)',
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  BIOGRAPHICAL: Colors.info,
-  PERSONAL: Colors.primary,
-  PERSONALITY: Colors.secondary,
-  VALUES: Colors.success,
-  UNCERTAIN: Colors.textMuted,
+const CATEGORY_NAMES: Record<string, string> = {
+  BIOGRAPHICAL: 'જીવનચરિત્ર',
+  PERSONAL: 'વાર્તા & પ્રસંગ',
+  PERSONALITY: 'સ્વભાવ & રસોઈ',
+  VALUES: 'સંસ્કાર & મૂલ્યો',
+  UNCERTAIN: 'અનિશ્ચિત',
 };
 
 interface Props {
   memory: Memory;
-  onApprove: () => void;
-  onReject: () => void;
+  onApprove?: () => void;
+  onReject?: () => void;
   onDelete: () => void;
+  onEdit?: (memory: Memory) => void;
 }
 
-export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
+export function MemoryCard({ memory, onDelete, onEdit }: Props) {
   const [expanded, setExpanded] = useState(false);
 
   const confirmDelete = () => {
     Alert.alert(
       'સ્મૃતિ કાઢી નાખો?',
-      `"${memory.title}" ને કાયમી માટે દૂર કરવામાં આવશે.`,
+      `"${memory.title}" કાયમી ધોરણે દૂર થશે.`,
       [
         { text: 'રદ કરો', style: 'cancel' },
         { text: 'કાઢી નાખો', style: 'destructive', onPress: onDelete },
@@ -52,90 +43,79 @@ export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
     );
   };
 
+  const categoryLabel = CATEGORY_NAMES[memory.category] || memory.category;
+
   return (
     <View style={styles.card}>
-      {/* Header */}
-      <TouchableOpacity onPress={() => setExpanded(v => !v)} style={styles.header} activeOpacity={0.8}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.badge, { backgroundColor: CATEGORY_COLORS[memory.category] + '22' }]}>
-            <Text style={[styles.badgeText, { color: CATEGORY_COLORS[memory.category] }]}>
-              {CATEGORY_LABELS[memory.category] || memory.category}
-            </Text>
+      <TouchableOpacity
+        onPress={() => setExpanded(v => !v)}
+        style={styles.header}
+        activeOpacity={0.7}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{categoryLabel}</Text>
           </View>
-          <Text style={styles.title} numberOfLines={expanded ? undefined : 1}>
+          <Text style={styles.title} numberOfLines={expanded ? undefined : 2}>
             {memory.title}
           </Text>
         </View>
-        {expanded ? (
-          <ChevronUp size={18} color={Colors.textMuted} />
-        ) : (
-          <ChevronDown size={18} color={Colors.textMuted} />
-        )}
+
+        <View style={styles.headerRight}>
+          {expanded ? (
+            <ChevronUp size={16} color={Colors.textMuted} />
+          ) : (
+            <ChevronDown size={16} color={Colors.textMuted} />
+          )}
+        </View>
       </TouchableOpacity>
 
       {/* Expanded content */}
       {expanded && (
-        <>
-          <Text style={styles.content}>{memory.content}</Text>
+        <View style={styles.body}>
+          <Text style={styles.contentText}>{memory.content}</Text>
 
-          {memory.transcriptExcerpt && (
-            <View style={styles.transcriptBox}>
-              <Text style={styles.transcriptLabel}>સંદર્ભ નોંધ:</Text>
-              <Text style={styles.transcriptText} numberOfLines={3}>
-                "{memory.transcriptExcerpt}"
-              </Text>
+          {memory.characteristicPhrase ? (
+            <View style={styles.phraseBox}>
+              <Text style={styles.phraseLabel}>યાદગાર કહેવત / તકિયાકલામ:</Text>
+              <Text style={styles.phraseText}>«{memory.characteristicPhrase}»</Text>
             </View>
-          )}
+          ) : null}
 
-          {memory.sourceDescription && (
-            <Text style={styles.source}>સ્ત્રોત: {memory.sourceDescription}</Text>
-          )}
+          {memory.sourceDescription ? (
+            <Text style={styles.metaText}>સ્ત્રોત: {memory.sourceDescription}</Text>
+          ) : null}
 
-          {/* Status + Actions */}
-          <View style={styles.footer}>
-            <View style={styles.statusRow}>
-              {memory.familyApproved ? (
-                <View style={styles.approvedRow}>
-                  <CheckCircle2 size={13} color={Colors.success} style={{ marginRight: 4 }} />
-                  <Text style={styles.approved}>પરિવાર દ્વારા મંજૂર (Approved)</Text>
-                </View>
-              ) : (
-                <View style={styles.pendingRow}>
-                  <Clock size={13} color={Colors.secondary} style={{ marginRight: 4 }} />
-                  <Text style={styles.pending}>ચકાસણી બાકી</Text>
-                </View>
-              )}
-              {memory.verificationStatus === 'REJECTED' && (
-                <View style={styles.rejectedRow}>
-                  <XCircle size={13} color={Colors.error} style={{ marginRight: 4 }} />
-                  <Text style={styles.rejected}>અસ્વીકાર</Text>
-                </View>
-              )}
-              {memory.category === 'UNCERTAIN' && (
-                <View style={styles.uncertainRow}>
-                  <AlertTriangle size={13} color={Colors.uncertain} style={{ marginRight: 4 }} />
-                  <Text style={styles.uncertainLabel}>ચકાસણી વગર વાપરવામાં આવશે નહીં</Text>
-                </View>
-              )}
+          {memory.contributedBy ? (
+            <Text style={styles.metaText}>ઉમેરનાર: {memory.contributedBy}</Text>
+          ) : null}
+
+          <View style={styles.footerRow}>
+            <View style={styles.statusIndicator}>
+              <CheckCircle2 size={13} color={Colors.success} />
+              <Text style={styles.statusText}>પરિવાર દ્વારા પ્રમાણિત</Text>
             </View>
 
-            <View style={styles.actions}>
-              {!memory.familyApproved && memory.verificationStatus !== 'REJECTED' && (
-                <TouchableOpacity style={styles.approveBtn} onPress={onApprove}>
-                  <Text style={styles.approveBtnText}>મંજૂર કરો</Text>
+            <View style={styles.actionButtons}>
+              {onEdit && (
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => onEdit(memory)}
+                  activeOpacity={0.7}
+                >
+                  <Edit3 size={15} color={Colors.textSecondary} />
                 </TouchableOpacity>
               )}
-              {memory.familyApproved && (
-                <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
-                  <Text style={styles.rejectBtnText}>રદ કરો</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity style={styles.deleteBtn} onPress={confirmDelete}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={confirmDelete}
+                activeOpacity={0.7}
+              >
                 <Trash2 size={15} color={Colors.error} />
               </TouchableOpacity>
             </View>
           </View>
-        </>
+        </View>
       )}
     </View>
   );
@@ -143,156 +123,108 @@ export function MemoryCard({ memory, onApprove, onReject, onDelete }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: Colors.backgroundCard,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.sm + 2,
+    overflow: 'hidden',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    padding: Spacing.md,
+    gap: Spacing.sm,
   },
-  headerLeft: {
+  headerContent: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  },
+  headerRight: {
+    paddingTop: 2,
   },
   badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#F2F2F7',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.xs,
   },
   badgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontSize: Typography.fontSize.xs - 1,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textSecondary,
   },
   title: {
-    fontSize: 15,
-    fontWeight: '800',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.textPrimary,
-    flex: 1,
+    lineHeight: Typography.fontSize.base * Typography.lineHeight.normal,
   },
-  content: {
-    fontSize: 14,
+  body: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.divider,
+    paddingTop: Spacing.sm,
+  },
+  contentText: {
+    fontSize: Typography.fontSize.sm,
+    lineHeight: Typography.fontSize.sm * Typography.lineHeight.relaxed,
     color: Colors.textSecondary,
-    lineHeight: 21,
-    marginTop: 12,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
-  transcriptBox: {
-    backgroundColor: '#FFF8E7',
-    borderRadius: 10,
-    padding: 10,
-    marginVertical: 6,
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
+  phraseBox: {
+    backgroundColor: '#F2F2F7',
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.sm,
+    marginBottom: Spacing.sm,
   },
-  transcriptLabel: {
-    fontSize: 11,
-    color: Colors.textGold,
-    fontWeight: '700',
+  phraseLabel: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
     marginBottom: 2,
   },
-  transcriptText: {
-    fontSize: 13,
-    color: Colors.primary,
+  phraseText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
     fontStyle: 'italic',
   },
-  source: {
-    fontSize: 11,
+  metaText: {
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
-    marginTop: 4,
+    marginBottom: 3,
   },
-  footer: {
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: Colors.divider,
+  footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.divider,
   },
-  statusRow: {
-    flex: 1,
+  statusIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 4,
   },
-  approvedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  approved: {
-    fontSize: 11,
-    fontWeight: '700',
+  statusText: {
+    fontSize: Typography.fontSize.xs,
     color: Colors.success,
+    fontWeight: Typography.fontWeight.medium,
   },
-  pendingRow: {
+  actionButtons: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: Spacing.md,
   },
-  pending: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.secondary,
-  },
-  rejectedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rejected: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.error,
-  },
-  uncertainRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  uncertainLabel: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    fontStyle: 'italic',
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  approveBtn: {
-    backgroundColor: Colors.success,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-  },
-  approveBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  rejectBtn: {
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-  },
-  rejectBtnText: {
-    color: Colors.textMuted,
-    fontSize: 12,
-  },
-  deleteBtn: {
-    padding: 6,
+  iconButton: {
+    padding: 4,
   },
 });

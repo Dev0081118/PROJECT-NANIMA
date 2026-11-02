@@ -1,39 +1,38 @@
 /**
  * Screen: Onboarding (Family Orientation & Dialect Setup)
- * Guides family members through understanding the AI recreation,
- * setting up their relationship, and understanding cultural & privacy safeguards.
+ * Apple Setup Assistant design: content over containers, quiet luxury typography.
  */
 import React, { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView,
-  TouchableOpacity,
+  View, Text, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { Typography, Spacing, BorderRadius } from '../../constants/Typography';
+import { Heart, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react-native';
 
 const STEPS = [
   {
     title: 'પ્રેમપૂર્વક યાદોનું પુનર્નિર્માણ',
     subtitle: 'A Respectful Cultural Keepsake',
     content:
-      'Maa is crafted specifically around the warmth, cadence, and vocabulary of authentic Kathiyawadi Gujarati. It is designed to honour her memory, not replace her reality.',
-    icon: '👵',
+      'Maa is crafted around the warmth, cadence, and vocabulary of authentic Kathiyawadi Gujarati. It is designed to honour her memory and keep her voice close to heart.',
+    icon: Heart,
   },
   {
     title: 'ખાનગી અને સુરક્ષિત પારિવારિક જગ્યા',
     subtitle: 'Strict Privacy & Family Sovereignty',
     content:
       'All uploaded photographs, home audio recordings, and family stories remain strictly within your family vault. No public AI model training or data selling.',
-    icon: '🔒',
+    icon: ShieldCheck,
   },
   {
     title: 'સત્યનિષ્ઠા અને મર્યાદા',
     subtitle: 'Transparent AI Safeguards',
     content:
       'The AI clearly acknowledges when a memory is uncertain rather than inventing details. It reflects her known personality and values with honesty.',
-    icon: '🌿',
+    icon: Sparkles,
   },
 ];
 
@@ -49,45 +48,52 @@ export default function OnboardingScreen() {
   };
 
   const step = STEPS[currentStep];
+  const IconComponent = step.icon;
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
+        {/* Top Progress Indicator */}
         <View style={styles.header}>
-          <Text style={styles.brand}>Maa — Digital Legacy</Text>
+          <Text style={styles.brand}>Maa • Digital Legacy</Text>
           <View style={styles.progressRow}>
             {STEPS.map((_, i) => (
               <View
                 key={i}
                 style={[
-                  styles.progressDot,
-                  i === currentStep && styles.progressDotActive,
-                  i < currentStep && styles.progressDotCompleted,
+                  styles.progressBar,
+                  i <= currentStep && styles.progressBarActive,
                 ]}
               />
             ))}
           </View>
         </View>
 
-        <View style={styles.card}>
-          <Text style={styles.icon}>{step.icon}</Text>
+        {/* Central Editorial Content */}
+        <View style={styles.centerContent}>
+          <View style={styles.iconCircle}>
+            <IconComponent size={32} color={Colors.primary} strokeWidth={1.8} />
+          </View>
           <Text style={styles.stepTitle}>{step.title}</Text>
           <Text style={styles.stepSubtitle}>{step.subtitle}</Text>
           <Text style={styles.stepDescription}>{step.content}</Text>
         </View>
 
+        {/* Action Controls */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleNext}>
+          <TouchableOpacity style={styles.primaryButton} onPress={handleNext} activeOpacity={0.85}>
             <Text style={styles.primaryButtonText}>
-              {currentStep === STEPS.length - 1 ? 'Enter Family Space' : 'Continue'}
+              {currentStep === STEPS.length - 1 ? 'પરિવારમાં પ્રવેશો' : 'આગળ વધો'}
             </Text>
+            <ArrowRight size={18} color="#FFFFFF" />
           </TouchableOpacity>
           {currentStep > 0 && (
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => setCurrentStep(s => s - 1)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.backButtonText}>← Previous</Text>
+              <Text style={styles.backButtonText}>પાછળ</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -103,96 +109,97 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.lg,
     justifyContent: 'space-between',
   },
   header: {
     alignItems: 'center',
-    marginTop: Spacing.lg,
+    gap: Spacing.md,
   },
   brand: {
-    fontSize: Typography.fontSize.lg,
+    fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.semibold,
-    color: Colors.primary,
+    color: Colors.textSecondary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   progressRow: {
     flexDirection: 'row',
     gap: Spacing.xs,
-    marginTop: Spacing.md,
+    width: '100%',
+    paddingHorizontal: Spacing.md,
   },
-  progressDot: {
-    width: 28,
-    height: 4,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.border,
+  progressBar: {
+    flex: 1,
+    height: 3,
+    backgroundColor: '#E5E5EA',
+    borderRadius: 2,
   },
-  progressDotActive: {
+  progressBarActive: {
     backgroundColor: Colors.primary,
-    width: 36,
   },
-  progressDotCompleted: {
-    backgroundColor: Colors.primaryLight,
-  },
-  card: {
-    backgroundColor: Colors.backgroundCard,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
+  centerContent: {
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 3,
+    paddingHorizontal: Spacing.md,
   },
-  icon: {
-    fontSize: 54,
-    marginBottom: Spacing.md,
+  iconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFFFFF',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xl,
   },
   stepTitle: {
-    fontSize: Typography.fontSize.xl,
+    fontSize: Typography.fontSize['2xl'],
     fontWeight: Typography.fontWeight.bold,
     color: Colors.textPrimary,
     textAlign: 'center',
+    letterSpacing: -0.4,
     marginBottom: Spacing.xs,
   },
   stepSubtitle: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
-    color: Colors.secondary,
+    color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: Spacing.md,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    marginBottom: Spacing.lg,
   },
   stepDescription: {
     fontSize: Typography.fontSize.base,
+    lineHeight: Typography.fontSize.base * Typography.lineHeight.relaxed,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: Typography.fontSize.base * Typography.lineHeight.relaxed,
+    maxWidth: 320,
   },
   footer: {
     gap: Spacing.sm,
-    marginBottom: Spacing.md,
   },
   primaryButton: {
     backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    height: 50,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
   },
   primaryButtonText: {
-    color: Colors.textOnPrimary,
+    color: '#FFFFFF',
     fontSize: Typography.fontSize.base,
     fontWeight: Typography.fontWeight.semibold,
   },
   backButton: {
     alignItems: 'center',
-    padding: Spacing.xs,
+    paddingVertical: Spacing.sm,
   },
   backButtonText: {
-    color: Colors.textMuted,
     fontSize: Typography.fontSize.sm,
+    color: Colors.textMuted,
+    fontWeight: Typography.fontWeight.medium,
   },
 });

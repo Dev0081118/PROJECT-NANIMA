@@ -1,8 +1,10 @@
 /**
- * AvatarDisplay — Grandmother's Heirloom Portrait Frame
+ * AvatarDisplay — Grandmother's Portrait Presentation
  *
- * Warm royal antique gold framed portrait with soft breathing animation,
- * listening aura, and speaking pulse using Lucide icons and ornamental styling.
+ * Apple Quiet Luxury:
+ * - Natural, dignified portrait framing with subtle hairline border.
+ * - Restrained listening/speaking indicator ring.
+ * - No ornamental flames, sparkles, or fake visualizers.
  */
 import React, { useEffect, useRef } from 'react';
 import {
@@ -10,7 +12,7 @@ import {
 } from 'react-native';
 import { Colors } from '../../constants/Colors';
 import { useConversationStore, ConversationStatus } from '../../stores/conversation';
-import { Sparkles, HeartHandshake, Flame } from 'lucide-react-native';
+import { Typography } from '../../constants/Typography';
 
 interface Props {
   conversationStatus?: ConversationStatus;
@@ -22,68 +24,70 @@ export function AvatarDisplay({ conversationStatus: propStatus, portraitUri }: P
   const status = propStatus || storeStatus;
 
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0.4)).current;
+  const ringAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (status === 'listening') {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.05, duration: 800, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1.02, duration: 900, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
         ])
       ).start();
-      Animated.timing(glowAnim, { toValue: 0.9, duration: 400, useNativeDriver: true }).start();
+      Animated.timing(ringAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
     } else if (status === 'speaking') {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.03, duration: 350, useNativeDriver: true }),
-          Animated.timing(pulseAnim, { toValue: 0.98, duration: 350, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1.015, duration: 450, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 0.99, duration: 450, useNativeDriver: true }),
         ])
       ).start();
-      Animated.timing(glowAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+      Animated.timing(ringAnim, { toValue: 0.8, duration: 300, useNativeDriver: true }).start();
     } else {
       pulseAnim.stopAnimation();
-      Animated.timing(pulseAnim, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-      Animated.timing(glowAnim, { toValue: 0.4, duration: 300, useNativeDriver: true }).start();
+      ringAnim.stopAnimation();
+      Animated.timing(pulseAnim, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+      Animated.timing(ringAnim, { toValue: 0, duration: 250, useNativeDriver: true }).start();
     }
   }, [status]);
 
-  const borderColor =
-    status === 'listening' ? '#235D43' :
+  const activeColor =
+    status === 'listening' ? Colors.secondary :
     status === 'speaking' ? Colors.primary :
-    status === 'processing' ? Colors.secondary :
-    Colors.borderGold;
+    Colors.border;
 
   return (
     <View style={styles.container}>
+      {/* Subtle outer breathing aura when active */}
       <Animated.View
         style={[
-          styles.glowRing,
-          { opacity: glowAnim, transform: [{ scale: pulseAnim }] },
+          styles.ambientRing,
+          {
+            borderColor: activeColor,
+            opacity: ringAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 0.45],
+            }),
+            transform: [{ scale: pulseAnim }],
+          },
         ]}
       />
 
       <Animated.View
         style={[
-          styles.avatarFrame,
-          { borderColor, transform: [{ scale: pulseAnim }] },
+          styles.portraitFrame,
+          {
+            transform: [{ scale: pulseAnim }],
+            borderColor: status === 'idle' ? Colors.border : activeColor,
+          },
         ]}
       >
         {portraitUri ? (
-          <Image source={{ uri: portraitUri }} style={styles.portrait} />
+          <Image source={{ uri: portraitUri }} style={styles.portrait} resizeMode="cover" />
         ) : (
-          <View style={styles.placeholderInner}>
-            <View style={styles.flameBadge}>
-              <Flame size={20} color={Colors.secondary} />
-            </View>
-            <View style={styles.heritageIconContainer}>
-              <HeartHandshake size={38} color={Colors.primary} strokeWidth={2} />
-            </View>
-            <View style={styles.titleRow}>
-              <Sparkles size={11} color={Colors.textGold} />
-              <Text style={styles.placeholderText}>માઁ • સ્મૃતિ સ્વરૂપ</Text>
-              <Sparkles size={11} color={Colors.textGold} />
-            </View>
+          <View style={styles.placeholderContainer}>
+            <Text style={styles.monogram}>માઁ</Text>
+            <Text style={styles.placeholderSub}>સ્મૃતિ સ્વરૂપ</Text>
           </View>
         )}
       </Animated.View>
@@ -96,68 +100,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    width: 170,
-    height: 170,
+    width: 140,
+    height: 140,
   },
-  glowRing: {
+  ambientRing: {
     position: 'absolute',
-    width: 170,
-    height: 170,
-    borderRadius: 85,
-    backgroundColor: '#FFE9A8',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 1.5,
   },
-  avatarFrame: {
-    width: 154,
-    height: 154,
-    borderRadius: 77,
-    borderWidth: 3.5,
+  portraitFrame: {
+    width: 124,
+    height: 124,
+    borderRadius: 62,
+    borderWidth: 1,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFDF9',
-    shadowColor: Colors.secondary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   portrait: {
     width: '100%',
     height: '100%',
-    borderRadius: 77,
   },
-  placeholderInner: {
+  placeholderContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    padding: 10,
+    gap: 2,
   },
-  flameBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFF4D6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
-    marginBottom: 4,
+  monogram: {
+    fontSize: Typography.fontSize['3xl'],
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
   },
-  heritageIconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 2,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 4,
-  },
-  placeholderText: {
-    fontSize: 12,
-    color: Colors.primary,
-    fontWeight: '800',
+  placeholderSub: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
     letterSpacing: 0.5,
   },
 });

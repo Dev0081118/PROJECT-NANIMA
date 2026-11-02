@@ -5,28 +5,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
+import { Typography, Spacing, BorderRadius, Shadow } from '../../constants/Typography';
 import { useAuthStore } from '../../stores/auth';
 import {
-  Flame,
-  Sparkles,
   ArrowRight,
-  User,
-  Mail,
-  Lock,
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
   BookOpen,
+  Users,
+  Lock,
 } from 'lucide-react-native';
 
 type Tab = 'login' | 'register' | 'about';
 
 const KINSHIP_OPTIONS = [
-  { label: 'પૌત્ર (Grandson)', value: 'પૌત્ર (Grandson)', call: 'દિકરા' },
-  { label: 'દીકરો (Son)', value: 'દીકરો (Son)', call: 'ભાઈ' },
-  { label: 'પૌત્રી (Granddaughter)', value: 'પૌત્રી (Granddaughter)', call: 'દિકરી' },
-  { label: 'પુત્રવધૂ (Daughter-in-law)', value: 'પુત્રવધૂ (Daughter-in-law)', call: 'વહુ બેટા' },
-  { label: 'દીકરી (Daughter)', value: 'દીકરી (Daughter)', call: 'બેટા' },
+  { label: 'પૌત્ર (Grandson)', value: 'પૌત્ર', call: 'દિકરા' },
+  { label: 'દીકરો (Son)', value: 'દીકરો', call: 'ભાઈ' },
+  { label: 'પૌત્રી (Granddaughter)', value: 'પૌત્રી', call: 'દિકરી' },
+  { label: 'પુત્રવધૂ (Daughter-in-law)', value: 'પુત્રવધૂ', call: 'વહુ બેટા' },
+  { label: 'દીકરી (Daughter)', value: 'દીકરી', call: 'બેટા' },
 ];
 
 export default function WelcomeScreen() {
@@ -34,7 +32,7 @@ export default function WelcomeScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [memberName, setMemberName] = useState('દિવ્યરાજ');
-  const [familyName, setFamilyName] = useState('રાણા પરિવાર (Rana Family)');
+  const [familyName, setFamilyName] = useState('રાણા પરિવાર');
   const [selectedKinship, setSelectedKinship] = useState(KINSHIP_OPTIONS[0]);
   const [formError, setFormError] = useState('');
 
@@ -80,116 +78,82 @@ export default function WelcomeScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {/* Top Auspicious Inscription */}
-          <View style={styles.auspiciousBanner}>
-            <Text style={styles.auspiciousText}>॥ શ્રી ગણેશાય નમઃ ॥</Text>
-          </View>
-
-          {/* Heirloom Hero Card */}
-          <View style={styles.heroCard}>
-            <View style={styles.diyaGlowCircle}>
-              <Flame size={32} color={Colors.secondary} />
-            </View>
-            <Text style={styles.appTitle}>માઁ</Text>
-            <Text style={styles.appSubtitle}>અમર સ્મૃતિ • કૌટુંબિક ખજાનો</Text>
-            <View style={styles.ornamentDivider}>
-              <View style={styles.dividerLine} />
-              <Sparkles size={14} color={Colors.secondary} style={{ marginHorizontal: 8 }} />
-              <View style={styles.dividerLine} />
-            </View>
-            <Text style={styles.heroPoem}>
-              "દાદીમાનો વહાલ, કાઠિયાવાડી મીઠી વાતો અને જીવનના સંસ્કાર — હંમેશા આપણી સાથે."
+          {/* Header & Typography Presentation */}
+          <View style={styles.header}>
+            <Text style={styles.brandTitle}>Maa</Text>
+            <Text style={styles.brandSubtitle}>Digital Legacy • અમર સ્મૃતિ</Text>
+            <Text style={styles.brandDescription}>
+              કાઠિયાવાડી દાદીમાના અવાજ, વહાલ અને કૌટુંબિક સંસ્કારોનું શાશ્વત સંરક્ષણ.
             </Text>
           </View>
 
-          {/* Quick Vault Shortcut for Instant Family Access */}
-          <TouchableOpacity
-            style={styles.quickVaultButton}
-            onPress={enterDemoMode}
-            activeOpacity={0.88}
-          >
-            <View style={styles.quickVaultRow}>
-              <View style={styles.quickVaultIconBadge}>
-                <Sparkles size={20} color="#F3E5AB" />
-              </View>
-              <View style={styles.quickVaultTextGroup}>
-                <Text style={styles.quickVaultTitle}>સીધા પરિવાર ખજાનામાં પ્રવેશો</Text>
-                <Text style={styles.quickVaultDesc}>
-                  વાર્તાઓ, ચરિત્ર નિર્માણ અને વાતચીત જોવા ૧-ટેપ કરો
-                </Text>
-              </View>
-              <ArrowRight size={20} color="#F3E5AB" strokeWidth={2.5} />
-            </View>
-          </TouchableOpacity>
-
-          {/* Tab Selector */}
-          <View style={styles.tabBar}>
+          {/* iOS Segmented Control */}
+          <View style={styles.segmentedControl}>
             <TouchableOpacity
-              style={[styles.tabItem, activeTab === 'login' && styles.tabItemActive]}
+              style={[styles.segment, activeTab === 'login' && styles.segmentActive]}
               onPress={() => { setActiveTab('login'); setFormError(''); }}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.tabText, activeTab === 'login' && styles.tabTextActive]}>
-                પરિવાર પ્રવેશ
+              <Text style={[styles.segmentText, activeTab === 'login' && styles.segmentTextActive]}>
+                પ્રવેશ
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.tabItem, activeTab === 'register' && styles.tabItemActive]}
+              style={[styles.segment, activeTab === 'register' && styles.segmentActive]}
               onPress={() => { setActiveTab('register'); setFormError(''); }}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.tabText, activeTab === 'register' && styles.tabTextActive]}>
-                નવું સભ્ય નોંધણી
+              <Text style={[styles.segmentText, activeTab === 'register' && styles.segmentTextActive]}>
+                નવું સભ્ય
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.tabItem, activeTab === 'about' && styles.tabItemActive]}
+              style={[styles.segment, activeTab === 'about' && styles.segmentActive]}
               onPress={() => { setActiveTab('about'); setFormError(''); }}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.tabText, activeTab === 'about' && styles.tabTextActive]}>
-                માર્ગદર્શન
+              <Text style={[styles.segmentText, activeTab === 'about' && styles.segmentTextActive]}>
+                પરિચય
               </Text>
             </TouchableOpacity>
           </View>
 
+          {/* Form Error Notice */}
           {formError ? (
-            <View style={styles.errorContainer}>
-              <AlertCircle size={18} color={Colors.error} />
+            <View style={styles.errorBanner}>
+              <AlertCircle size={16} color={Colors.error} />
               <Text style={styles.errorText}>{formError}</Text>
             </View>
           ) : null}
 
-          {/* LOGIN TAB */}
+          {/* Tab 1: Login */}
           {activeTab === 'login' && (
-            <View style={styles.formCard}>
-              <Text style={styles.formHeaderTitle}>કૌટુંબિક ખાતામાં પ્રવેશ</Text>
-              <Text style={styles.formHeaderDesc}>
-                તમારું ઇમેઇલ અથવા સભ્ય નામ અને પાસવર્ડ દાખલ કરો:
-              </Text>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>ઇમેઇલ અથવા સભ્ય ID</Text>
-                <View style={styles.inputFieldContainer}>
-                  <Mail size={18} color={Colors.textMuted} style={styles.inputIcon} />
+            <View style={styles.formContainer}>
+              <View style={styles.groupedFields}>
+                <View style={styles.inputRow}>
+                  <Text style={styles.inputLabel}>ઇમેઇલ</Text>
                   <TextInput
-                    style={styles.textInputWithIcon}
-                    placeholder="divyaraj@nanima.heritage"
+                    style={styles.textInput}
+                    placeholder="parivaar@nanima.heritage"
                     placeholderTextColor={Colors.textMuted}
                     value={email}
                     onChangeText={setEmail}
-                    autoCapitalize="none"
                     keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                   />
                 </View>
-              </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>પાસવર્ડ / કુટુંબ PIN</Text>
-                <View style={styles.inputFieldContainer}>
-                  <Lock size={18} color={Colors.textMuted} style={styles.inputIcon} />
+                <View style={styles.divider} />
+
+                <View style={styles.inputRow}>
+                  <Text style={styles.inputLabel}>પાસવર્ડ</Text>
                   <TextInput
-                    style={styles.textInputWithIcon}
+                    style={styles.textInput}
                     placeholder="••••••••"
                     placeholderTextColor={Colors.textMuted}
                     value={password}
@@ -200,154 +164,167 @@ export default function WelcomeScreen() {
               </View>
 
               <TouchableOpacity
-                style={styles.actionButton}
+                style={styles.primaryButton}
                 onPress={handleLogin}
                 disabled={isLoading}
                 activeOpacity={0.85}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
-                  <Text style={styles.actionButtonText}>પ્રવેશ કરો (Open Vault)</Text>
+                  <Text style={styles.primaryButtonText}>પરિવાર પ્રવેશ</Text>
                 )}
               </TouchableOpacity>
             </View>
           )}
 
-          {/* REGISTER TAB */}
+          {/* Tab 2: Register */}
           {activeTab === 'register' && (
-            <View style={styles.formCard}>
-              <Text style={styles.formHeaderTitle}>નવા સભ્યનું જોડાણ</Text>
-              <Text style={styles.formHeaderDesc}>
-                દાદીમા સાથે તમારી વ્યક્તિગત ઓળખ અને સગપણ નક્કી કરો:
-              </Text>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>તમારું નામ (Your Name)</Text>
-                <View style={styles.inputFieldContainer}>
-                  <User size={18} color={Colors.textMuted} style={styles.inputIcon} />
+            <View style={styles.formContainer}>
+              <View style={styles.groupedFields}>
+                <View style={styles.inputRow}>
+                  <Text style={styles.inputLabel}>પરિવારનું નામ</Text>
                   <TextInput
-                    style={styles.textInputWithIcon}
-                    placeholder="દા.ત. દિવ્યરાજ, જયદીપ, અલ્પા"
+                    style={styles.textInput}
+                    placeholder="ઉદા. રાણા પરિવાર"
+                    placeholderTextColor={Colors.textMuted}
+                    value={familyName}
+                    onChangeText={setFamilyName}
+                  />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.inputRow}>
+                  <Text style={styles.inputLabel}>તમારું નામ</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="ઉદા. દિવ્યરાજ"
                     placeholderTextColor={Colors.textMuted}
                     value={memberName}
                     onChangeText={setMemberName}
                   />
                 </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.inputRow}>
+                  <Text style={styles.inputLabel}>ઇમેઇલ</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="divyaraj@nanima.heritage"
+                    placeholderTextColor={Colors.textMuted}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.inputRow}>
+                  <Text style={styles.inputLabel}>પાસવર્ડ</Text>
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="નવો પાસવર્ડ બનાવો"
+                    placeholderTextColor={Colors.textMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                  />
+                </View>
               </View>
 
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>દાદીમા સાથે સંબંધ (Kinship)</Text>
-                <View style={styles.kinshipPillContainer}>
+              {/* Kinship Selection */}
+              <View style={styles.kinshipSection}>
+                <Text style={styles.sectionCaption}>દાદીમા સાથે તમારો સંબંધ:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.kinshipPills}>
                   {KINSHIP_OPTIONS.map((k) => {
                     const isSelected = selectedKinship.value === k.value;
                     return (
                       <TouchableOpacity
                         key={k.value}
-                        style={[styles.kinshipPill, isSelected && styles.kinshipPillSelected]}
+                        style={[styles.kinshipPill, isSelected && styles.kinshipPillActive]}
                         onPress={() => setSelectedKinship(k)}
-                        activeOpacity={0.8}
+                        activeOpacity={0.7}
                       >
-                        {isSelected && <CheckCircle2 size={13} color="#FFFFFF" style={{ marginRight: 4 }} />}
-                        <Text style={[styles.kinshipPillText, isSelected && styles.kinshipPillTextSelected]}>
+                        <Text style={[styles.kinshipPillText, isSelected && styles.kinshipPillTextActive]}>
                           {k.label}
                         </Text>
                       </TouchableOpacity>
                     );
                   })}
-                </View>
-                <Text style={styles.kinshipPreviewHint}>
-                  માઁ તમને <Text style={styles.bold}>"{selectedKinship.call} {memberName || 'ભાઈ'}"</Text> કહીને બોલાવશે.
-                </Text>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>પરિવારનું નામ (Household)</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="રાણા પરિવાર (Rana Family)"
-                  placeholderTextColor={Colors.textMuted}
-                  value={familyName}
-                  onChangeText={setFamilyName}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>ઇમેઇલ</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="divyaraj@gmail.com"
-                  placeholderTextColor={Colors.textMuted}
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>પાસવર્ડ</Text>
-                <TextInput
-                  style={styles.textInput}
-                  placeholder="ઓછામાં ઓછા ૮ અક્ષર"
-                  placeholderTextColor={Colors.textMuted}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
+                </ScrollView>
               </View>
 
               <TouchableOpacity
-                style={styles.actionButton}
+                style={styles.primaryButton}
                 onPress={handleRegister}
                 disabled={isLoading}
                 activeOpacity={0.85}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#FFFFFF" />
+                  <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
-                  <Text style={styles.actionButtonText}>પરિવારમાં નોંધણી કરો</Text>
+                  <Text style={styles.primaryButtonText}>નોંધણી પૂર્ણ કરો</Text>
                 )}
               </TouchableOpacity>
             </View>
           )}
 
-          {/* ABOUT & ETHICAL DISCLOSURE TAB */}
+          {/* Tab 3: About / Privacy */}
           {activeTab === 'about' && (
-            <View style={styles.aboutCard}>
-              <View style={styles.aboutHeaderRow}>
-                <BookOpen size={20} color={Colors.primary} />
-                <Text style={styles.aboutHeader}>આ એપ્લિકેશન વિશે</Text>
-              </View>
-              <Text style={styles.aboutParagraph}>
-                આ એપ્લિકેશન દાદીમાની યાદો, કૌટુંબિક કથાઓ, કાઠિયાવાડી ભાષાશૈલી અને એમની લાક્ષણિક વાતોને સાચવી રાખવા માટેનો એક ખાનગી કૌટુંબિક ખજાનો છે.
-              </Text>
-
-              <View style={styles.goldInfoBox}>
-                <View style={styles.goldInfoTitleRow}>
-                  <ShieldCheck size={18} color={Colors.textGold} />
-                  <Text style={styles.goldInfoTitle}>ગોપનીયતા અને સંસ્કાર સુરક્ષા</Text>
+            <View style={styles.aboutContainer}>
+              <View style={styles.groupedFields}>
+                <View style={styles.aboutRow}>
+                  <ShieldCheck size={20} color={Colors.secondary} style={styles.aboutIcon} />
+                  <View style={styles.aboutTextCol}>
+                    <Text style={styles.aboutHeading}>સંપૂર્ણ પારિવારિક ગોપનીયતા</Text>
+                    <Text style={styles.aboutDesc}>
+                      દાદીમાના ઓડિયો, વાર્તાઓ અને ફોટા ફક્ત તમારા પરિવાર સુધી જ સીમિત રહે છે.
+                    </Text>
+                  </View>
                 </View>
-                <Text style={styles.goldInfoText}>
-                  • પરિવારના દરેક સભ્યની વાતચીત એકદમ ખાનગી (Private) રહેશે.
-                </Text>
-                <Text style={styles.goldInfoText}>
-                  • તમામ સભ્યો દાદીમાની યાદો, વાનગીઓ અને વાર્તાઓ ઉમેરી શકે છે જે ચરિત્ર નિર્માણમાં મદદરૂપ બને છે.
-                </Text>
-                <Text style={styles.goldInfoText}>
-                  • આ આર્ટિફિશિયલ ઇન્ટેલિજન્સ આધારિત સ્મૃતિ-પુનઃનિર્માણ છે, જે કુટુંબના વારસાને જીવંત રાખવા બનાવાયું છે.
-                </Text>
-              </View>
 
-              <TouchableOpacity
-                style={[styles.actionButton, { marginTop: 16 }]}
-                onPress={enterDemoMode}
-              >
-                <Text style={styles.actionButtonText}>આગળ વધો (Start Experience)</Text>
-              </TouchableOpacity>
+                <View style={styles.divider} />
+
+                <View style={styles.aboutRow}>
+                  <BookOpen size={20} color={Colors.secondary} style={styles.aboutIcon} />
+                  <View style={styles.aboutTextCol}>
+                    <Text style={styles.aboutHeading}>પ્રમાણિક સ્મૃતિ પુનઃનિર્માણ</Text>
+                    <Text style={styles.aboutDesc}>
+                      દાદીમાનો જાણીતો કાઠિયાવાડી લહેકો અને સાચી યાદો. અજ્ઞાત વિગતો જાતે ઉપજાવી કાઢવામાં આવતી નથી.
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.aboutRow}>
+                  <Users size={20} color={Colors.secondary} style={styles.aboutIcon} />
+                  <View style={styles.aboutTextCol}>
+                    <Text style={styles.aboutHeading}>સહિયારું ચરિત્ર નિર્માણ</Text>
+                    <Text style={styles.aboutDesc}>
+                      પરિવારના દરેક સભ્યો પોતાના સંસ્મરણો અને અનુભવો ઉમેરી શકે છે.
+                    </Text>
+                  </View>
+                </View>
+              </View>
             </View>
           )}
 
-          <View style={styles.footerSpace} />
+          {/* Quick Vault Shortcut (Apple subtle secondary) */}
+          <View style={styles.vaultAccessSection}>
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={enterDemoMode}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.secondaryButtonText}>સીધા પરિવાર ખજાનામાં પ્રવેશો</Text>
+              <ArrowRight size={16} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -363,337 +340,201 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 40,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing['3xl'],
   },
-  auspiciousBanner: {
+  header: {
     alignItems: 'center',
-    paddingVertical: 6,
+    marginBottom: Spacing.xl,
+    marginTop: Spacing.md,
   },
-  auspiciousText: {
-    fontSize: 13,
-    color: Colors.textGold,
-    fontWeight: '700',
-    letterSpacing: 2,
+  brandTitle: {
+    fontSize: Typography.fontSize['3xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    letterSpacing: -0.5,
   },
-  heroCard: {
-    backgroundColor: Colors.backgroundCard,
-    borderRadius: 24,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
-    shadowColor: Colors.shadowHeavy,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 4,
-    marginTop: 6,
-    marginBottom: 16,
-  },
-  diyaGlowCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: '#FFF4D6',
-    borderWidth: 2,
-    borderColor: Colors.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-    shadowColor: Colors.secondary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-  },
-  appTitle: {
-    fontSize: 38,
-    fontWeight: '900',
-    color: Colors.primary,
-    letterSpacing: 1,
-  },
-  appSubtitle: {
-    fontSize: 15,
-    fontWeight: '700',
+  brandSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
     color: Colors.textSecondary,
-    marginTop: 2,
-    letterSpacing: 0.5,
+    marginTop: 4,
   },
-  ornamentDivider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '60%',
-    marginVertical: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.borderGold,
-  },
-  heroPoem: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 21,
-    fontStyle: 'italic',
-  },
-  quickVaultButton: {
-    backgroundColor: '#731828',
-    borderRadius: 18,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    shadowColor: '#731828',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  quickVaultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  quickVaultIconBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  quickVaultTextGroup: {
-    flex: 1,
-  },
-  quickVaultTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#FFF8E7',
-  },
-  quickVaultDesc: {
-    fontSize: 12,
-    color: '#E8C766',
-    marginTop: 2,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#EFE6DC',
-    borderRadius: 14,
-    padding: 4,
-    marginBottom: 16,
-  },
-  tabItem: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 11,
-  },
-  tabItemActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tabText: {
-    fontSize: 13,
-    fontWeight: '600',
+  brandDescription: {
+    fontSize: Typography.fontSize.sm,
+    lineHeight: Typography.fontSize.sm * Typography.lineHeight.relaxed,
     color: Colors.textMuted,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+    maxWidth: 320,
   },
-  tabTextActive: {
-    color: Colors.primary,
-    fontWeight: '800',
+  segmentedControl: {
+    flexDirection: 'row',
+    backgroundColor: '#EBEBEF',
+    borderRadius: BorderRadius.md,
+    padding: 3,
+    marginBottom: Spacing.lg,
   },
-  errorContainer: {
+  segment: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: BorderRadius.sm,
+  },
+  segmentActive: {
+    backgroundColor: '#FFFFFF',
+    ...Shadow.sm,
+  },
+  segmentText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.regular,
+    color: Colors.textSecondary,
+  },
+  segmentTextActive: {
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+  },
+  errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FDECEB',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: Colors.error,
+    backgroundColor: '#FFF2F2',
+    borderColor: '#FFD2D2',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    gap: Spacing.sm,
   },
   errorText: {
+    fontSize: Typography.fontSize.sm,
     color: Colors.error,
-    fontSize: 13,
-    fontWeight: '600',
     flex: 1,
   },
-  formCard: {
+  formContainer: {
+    gap: Spacing.md,
+  },
+  groupedFields: {
     backgroundColor: Colors.backgroundCard,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
+    borderRadius: BorderRadius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 2,
+    overflow: 'hidden',
+    ...Shadow.sm,
   },
-  formHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.primary,
-    marginBottom: 4,
-  },
-  formHeaderDesc: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginBottom: 16,
-    lineHeight: 18,
-  },
-  inputGroup: {
-    marginBottom: 14,
+  inputRow: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
   },
   inputLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: 6,
-  },
-  inputFieldContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-  },
-  inputIcon: {
-    marginRight: 8,
-  },
-  textInputWithIcon: {
-    flex: 1,
-    paddingVertical: 11,
-    fontSize: 15,
-    color: Colors.textPrimary,
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   textInput: {
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    fontSize: 15,
+    fontSize: Typography.fontSize.md,
     color: Colors.textPrimary,
+    paddingVertical: Platform.OS === 'ios' ? 4 : 2,
   },
-  kinshipPillContainer: {
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.divider,
+    marginLeft: Spacing.md,
+  },
+  kinshipSection: {
+    marginTop: Spacing.xs,
+  },
+  sectionCaption: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    marginLeft: 2,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  kinshipPills: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginVertical: 4,
+    gap: Spacing.xs,
+    paddingBottom: Spacing.xs,
   },
   kinshipPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5ECE3',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    borderWidth: 1,
+    backgroundColor: Colors.backgroundCard,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
   },
-  kinshipPillSelected: {
+  kinshipPillActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
   kinshipPillText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
+    fontWeight: Typography.fontWeight.medium,
   },
-  kinshipPillTextSelected: {
+  kinshipPillTextActive: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: Typography.fontWeight.semibold,
   },
-  kinshipPreviewHint: {
-    fontSize: 12,
-    color: Colors.textGold,
-    marginTop: 6,
-    fontStyle: 'italic',
-  },
-  actionButton: {
+  primaryButton: {
     backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: BorderRadius.lg,
+    height: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
+    marginTop: Spacing.sm,
+    ...Shadow.sm,
   },
-  actionButtonText: {
+  primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.5,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
   },
-  aboutCard: {
-    backgroundColor: Colors.backgroundCard,
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
+  aboutContainer: {
+    gap: Spacing.md,
   },
-  aboutHeaderRow: {
+  aboutRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  aboutIcon: {
+    marginTop: 2,
+  },
+  aboutTextCol: {
+    flex: 1,
+  },
+  aboutHeading: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  aboutDesc: {
+    fontSize: Typography.fontSize.sm,
+    lineHeight: Typography.fontSize.sm * Typography.lineHeight.relaxed,
+    color: Colors.textSecondary,
+  },
+  vaultAccessSection: {
+    marginTop: Spacing.xl,
+    alignItems: 'center',
+  },
+  secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 10,
+    gap: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
   },
-  aboutHeader: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  aboutParagraph: {
-    fontSize: 14,
+  secondaryButtonText: {
+    fontSize: Typography.fontSize.sm,
     color: Colors.textSecondary,
-    lineHeight: 22,
-    textAlign: 'center',
-    marginBottom: 14,
-  },
-  goldInfoBox: {
-    backgroundColor: '#FFF8E7',
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
-    gap: 8,
-  },
-  goldInfoTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  goldInfoTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: Colors.textGold,
-  },
-  goldInfoText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 19,
-  },
-  bold: {
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  footerSpace: {
-    height: 30,
+    fontWeight: Typography.fontWeight.medium,
   },
 });

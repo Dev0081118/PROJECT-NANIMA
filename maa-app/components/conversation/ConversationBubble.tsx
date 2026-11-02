@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Colors } from '../../constants/Colors';
+import { Typography, Spacing, BorderRadius } from '../../constants/Typography';
 import { ConversationTurn } from '../../stores/conversation';
-import { Sparkles, HeartHandshake, User } from 'lucide-react-native';
+import { BookOpen } from 'lucide-react-native';
 
 interface Props {
   turn: ConversationTurn;
@@ -13,45 +14,30 @@ export function ConversationBubble({ turn }: Props) {
 
   return (
     <View style={[styles.row, isUser ? styles.rowUser : styles.rowAssistant]}>
-      {!isUser && (
-        <View style={styles.maaAvatarCircle}>
-          <HeartHandshake size={18} color={Colors.primary} strokeWidth={2.2} />
-        </View>
-      )}
-
       <View
         style={[
           styles.bubble,
           isUser ? styles.bubbleUser : styles.bubbleAssistant,
         ]}
       >
-        {/* Header label for persona/member attribution */}
-        <View style={styles.bubbleHeaderRow}>
-          <Text style={[styles.senderLabel, isUser ? styles.senderLabelUser : styles.senderLabelMaa]}>
-            {isUser ? (turn.memberName ? `${turn.memberName}` : 'તમે (You)') : 'માઁ (Maa)'}
-          </Text>
-          {!isUser && <Sparkles size={11} color={Colors.textGold} />}
-        </View>
+        {/* Subtle Header */}
+        <Text style={[styles.senderLabel, isUser ? styles.senderLabelUser : styles.senderLabelMaa]}>
+          {isUser ? (turn.memberName || 'તમે') : 'માઁ'}
+        </Text>
 
         <Text style={[styles.text, isUser ? styles.textUser : styles.textAssistant]}>
           {turn.text}
         </Text>
 
         {!isUser && turn.memoriesUsed && turn.memoriesUsed > 0 ? (
-          <View style={styles.memoryTag}>
-            <Sparkles size={11} color={Colors.textGold} style={{ marginRight: 4 }} />
-            <Text style={styles.memoryTagText}>
-              {turn.memoriesUsed} કૌટુંબિક સ્મૃતિઓ આધારિત ({turn.memoriesUsed} memories recalled)
+          <View style={styles.memoryFootnote}>
+            <BookOpen size={11} color={Colors.textMuted} style={{ marginRight: 4 }} />
+            <Text style={styles.memoryFootnoteText}>
+              {turn.memoriesUsed} સ્મૃતિઓ આધારિત ({turn.memoriesUsed} memories recalled)
             </Text>
           </View>
         ) : null}
       </View>
-
-      {isUser && (
-        <View style={styles.userAvatarCircle}>
-          <User size={18} color={Colors.primary} strokeWidth={2.2} />
-        </View>
-      )}
     </View>
   );
 }
@@ -59,9 +45,8 @@ export function ConversationBubble({ turn }: Props) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    marginBottom: 14,
-    gap: 8,
-    alignItems: 'flex-start',
+    marginBottom: Spacing.sm + 4,
+    paddingHorizontal: Spacing.md,
   },
   rowUser: {
     justifyContent: 'flex-end',
@@ -69,100 +54,59 @@ const styles = StyleSheet.create({
   rowAssistant: {
     justifyContent: 'flex-start',
   },
-  maaAvatarCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFF4D6',
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  userAvatarCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
   bubble: {
-    maxWidth: '80%',
-    borderRadius: 18,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    elevation: 2,
+    maxWidth: '82%',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    borderRadius: BorderRadius.lg,
   },
   bubbleUser: {
-    backgroundColor: '#731828',
-    borderBottomRightRadius: 4,
+    backgroundColor: Colors.userBubble,
+    borderBottomRightRadius: BorderRadius.xs,
   },
   bubbleAssistant: {
-    backgroundColor: '#FFFFFF',
-    borderBottomLeftRadius: 4,
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-  },
-  bubbleHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-    gap: 4,
+    backgroundColor: Colors.assistantBubble,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    borderBottomLeftRadius: BorderRadius.xs,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   senderLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.medium,
+    marginBottom: 3,
   },
   senderLabelUser: {
-    color: '#F3E5AB',
+    color: '#A1A1A6',
+    textAlign: 'right',
   },
   senderLabelMaa: {
-    color: Colors.primary,
+    color: Colors.textSecondary,
   },
   text: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: Typography.fontSize.md,
+    lineHeight: Typography.fontSize.md * Typography.lineHeight.relaxed,
   },
   textUser: {
     color: '#FFFFFF',
-    fontWeight: '500',
   },
   textAssistant: {
     color: Colors.textPrimary,
-    fontWeight: '500',
   },
-  memoryTag: {
-    marginTop: 8,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: '#F5ECE3',
+  memoryFootnote: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: Spacing.xs + 2,
+    paddingTop: Spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.divider,
   },
-  memoryTagText: {
-    fontSize: 11,
-    color: Colors.textGold,
-    fontWeight: '700',
-    fontStyle: 'italic',
+  memoryFootnoteText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
   },
 });

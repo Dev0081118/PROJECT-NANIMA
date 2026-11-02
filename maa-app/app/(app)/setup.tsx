@@ -1,7 +1,9 @@
 /**
- * Screen: Family Household Hub & Character Ingestion (પરિવાર - Setup)
- *
- * Manage all household members using sleek Lucide icons.
+ * Screen: Family Household Hub & Character Ingestion (પરિવાર)
+ * Apple-Inspired Quiet Luxury:
+ * - Apple Family Sharing / Contacts aesthetic
+ * - Multi-member profile switching for customized kinship
+ * - Collaborative story and voice ingestion
  */
 import React, { useState } from 'react';
 import {
@@ -10,31 +12,26 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
+import { Typography, Spacing, BorderRadius } from '../../constants/Typography';
 import { useAuthStore } from '../../stores/auth';
 import { useMemoryStore } from '../../stores/memory';
 import {
-  Users,
   UserPlus,
   CheckCircle2,
-  Quote,
   FileText,
-  Sparkles,
   X,
   User,
-  Heart,
-  Crown,
-  Smile,
-  ShieldCheck,
+  ChevronRight,
 } from 'lucide-react-native';
 
 const KINSHIP_SUGGESTIONS = [
-  { label: 'પૌત્ર (Grandson)', call: 'દિકરા' },
-  { label: 'દીકરો (Son)', call: 'ભાઈ' },
-  { label: 'પૌત્રી (Granddaughter)', call: 'દિકરી' },
-  { label: 'પુત્રવધૂ (Daughter-in-law)', call: 'વહુ બેટા' },
-  { label: 'દીકરી (Daughter)', call: 'બેટા' },
-  { label: 'જમાઈ (Son-in-law)', call: 'જમાઈરાજ' },
-  { label: 'ભાણેજ (Nephew)', call: 'ભાણિયા' },
+  { label: 'પૌત્ર', call: 'દિકરા' },
+  { label: 'દીકરો', call: 'ભાઈ' },
+  { label: 'પૌત્રી', call: 'દિકરી' },
+  { label: 'પુત્રવધૂ', call: 'વહુ બેટા' },
+  { label: 'દીકરી', call: 'બેટા' },
+  { label: 'જમાઈ', call: 'જમાઈરાજ' },
+  { label: 'ભાણેજ', call: 'ભાણિયા' },
 ];
 
 export default function SetupScreen() {
@@ -104,196 +101,197 @@ export default function SetupScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header Banner */}
-        <View style={styles.headerCard}>
-          <View style={styles.headerTitleRow}>
-            <Users size={24} color={Colors.primary} />
-            <Text style={styles.headerTitle}>
-              {user?.familyName || 'રાણા પરિવાર (Rana Household)'}
-            </Text>
-          </View>
-          <Text style={styles.headerDesc}>
-            દરેક સભ્ય પોતાની ઓળખ સાથે દાદીમા સાથે અંગત વાતચીત કરી શકે છે અને સ્મૃતિઓ ઉમેરી શકે છે.
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>પરિવાર</Text>
+          <Text style={styles.subtitle}>
+            {user?.familyName || 'રાણા પરિવાર'} • {familyMembers.length} સભ્યો
           </Text>
         </View>
 
-        {/* Family Members Section */}
-        <View style={styles.sectionHeaderRow}>
-          <View>
-            <Text style={styles.sectionTitle}>કુટુંબના સભ્યો ({familyMembers.length})</Text>
-            <Text style={styles.sectionSubtitle}>
-              વાત કરવા માટે સભ્ય પર ટેપ કરો
-            </Text>
+        {/* Section 1: Household Members (iOS Inset Grouped Table) */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>કુટુંબના સભ્યો</Text>
+            <TouchableOpacity
+              onPress={() => setShowAddMemberModal(true)}
+              activeOpacity={0.7}
+              style={styles.headerAction}
+            >
+              <UserPlus size={15} color={Colors.primary} />
+              <Text style={styles.headerActionText}>સભ્ય ઉમેરો</Text>
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.addMemberBtn}
-            onPress={() => setShowAddMemberModal(true)}
-            activeOpacity={0.8}
-          >
-            <UserPlus size={14} color="#FFFFFF" strokeWidth={2.4} style={{ marginRight: 4 }} />
-            <Text style={styles.addMemberBtnText}>સભ્ય ઉમેરો</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.groupedTable}>
+            {familyMembers.map((m, index) => {
+              const isActive = m.id === activeMember.id;
+              const isLast = index === familyMembers.length - 1;
 
-        {/* Member Cards */}
-        <View style={styles.membersGrid}>
-          {familyMembers.map((m) => {
-            const isActive = m.id === activeMember.id;
-            return (
-              <TouchableOpacity
-                key={m.id}
-                style={[styles.memberCard, isActive && styles.memberCardActive]}
-                onPress={() => setActiveMember(m.id)}
-                activeOpacity={0.85}
-              >
-                <View style={styles.memberCardTop}>
-                  <View style={[styles.avatarCircle, isActive && styles.avatarCircleActive]}>
-                    <User size={22} color={isActive ? Colors.primary : Colors.textMuted} />
-                  </View>
-                  {isActive && (
-                    <View style={styles.activeSpeakerBadge}>
-                      <CheckCircle2 size={13} color={Colors.success} style={{ marginRight: 4 }} />
-                      <Text style={styles.activeSpeakerText}>હાલમાં સક્રિય</Text>
+              return (
+                <View key={m.id}>
+                  <TouchableOpacity
+                    style={[styles.memberRow, isActive && styles.memberRowActive]}
+                    onPress={() => setActiveMember(m.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.memberAvatar}>
+                      <Text style={styles.memberInitial}>
+                        {m.name.charAt(0)}
+                      </Text>
                     </View>
-                  )}
-                </View>
 
-                <Text style={styles.memberCardName}>{m.name}</Text>
-                <Text style={styles.memberCardKinship}>{m.kinship}</Text>
+                    <View style={styles.memberInfo}>
+                      <View style={styles.memberNameRow}>
+                        <Text style={styles.memberName}>{m.name}</Text>
+                        {isActive && (
+                          <View style={styles.activePill}>
+                            <Text style={styles.activePillText}>સક્રિય</Text>
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.memberSub}>
+                        {m.kinship} • સંબોધન: «{m.callName}»
+                      </Text>
+                    </View>
 
-                <View style={styles.memberCallBox}>
-                  <Quote size={12} color={Colors.textGold} style={{ marginRight: 4 }} />
-                  <Text style={styles.memberCallLabel}>માઁ નું સંબોધન:</Text>
-                  <Text style={styles.memberCallValue}>"{m.callName}"</Text>
+                    {isActive ? (
+                      <CheckCircle2 size={18} color={Colors.success} />
+                    ) : (
+                      <ChevronRight size={18} color={Colors.textMuted} />
+                    )}
+                  </TouchableOpacity>
+
+                  {!isLast && <View style={styles.tableDivider} />}
                 </View>
-              </TouchableOpacity>
-            );
-          })}
+              );
+            })}
+          </View>
         </View>
 
-        {/* Transcript / Story Ingestion Section */}
-        <View style={styles.ingestCard}>
-          <View style={styles.ingestHeaderRow}>
-            <View style={styles.ingestIconCircle}>
-              <FileText size={22} color={Colors.primary} />
+        {/* Section 2: Character Ingestion (Apple Inset Card) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ચરિત્ર નિર્માણ & સ્મૃતિ નોંધ</Text>
+          <Text style={styles.sectionHint}>
+            દાદીમાના જૂના ઓડિયો, કૌટુંબિક પ્રસંગો કે વાર્તાઓ અહીં નોંધો:
+          </Text>
+
+          <View style={styles.groupedTable}>
+            <View style={styles.inputRow}>
+              <Text style={styles.inputLabel}>પ્રસંગ કે શીર્ષક</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="ઉદા. ગોંડલ મેળાની વાર્તા"
+                placeholderTextColor={Colors.textMuted}
+                value={transcriptTopic}
+                onChangeText={setTranscriptTopic}
+              />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.ingestTitle}>જૂની વાતો / કેસેટ નોંધ ઉમેરો</Text>
-              <Text style={styles.ingestSubtitle}>
-                દાદીમાના ભૂતકાળના પ્રસંગો કે વાતો અહીં લખો — AI આપમેળે વ્યક્તિત્વમાં વણી લેશે.
-              </Text>
+
+            <View style={styles.tableDivider} />
+
+            <View style={styles.inputRow}>
+              <Text style={styles.inputLabel}>વાતચીત કે સંસ્મરણની વિગત</Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                placeholder="દાદીમા શું કહેતા હતા, તેમની સાથે શું બન્યું હતું તે અહીં લખો..."
+                placeholderTextColor={Colors.textMuted}
+                value={transcriptText}
+                onChangeText={setTranscriptText}
+                multiline
+                numberOfLines={4}
+              />
             </View>
           </View>
 
-          <TextInput
-            style={styles.ingestTopicInput}
-            placeholder="પ્રસંગનું નામ (દા.ત. ગોંડલના ઘરની રીતભાત)"
-            placeholderTextColor={Colors.textMuted}
-            value={transcriptTopic}
-            onChangeText={setTranscriptTopic}
-          />
-
-          <TextInput
-            style={styles.ingestTextInput}
-            placeholder="દાદીમા શું કહેતા હતા, કેવો પ્રસંગ બન્યો હતો..."
-            placeholderTextColor={Colors.textMuted}
-            value={transcriptText}
-            onChangeText={setTranscriptText}
-            multiline
-            numberOfLines={4}
-          />
-
-          {ingestSuccess ? (
-            <View style={styles.successPill}>
-              <ShieldCheck size={14} color={Colors.success} style={{ marginRight: 4 }} />
-              <Text style={styles.successPillText}>સ્મૃતિ ખજાનામાં સફળતાપૂર્વક ઉમેરાઈ ગઈ!</Text>
-            </View>
-          ) : null}
-
           <TouchableOpacity
-            style={styles.ingestSaveButton}
+            style={styles.primaryButton}
             onPress={handleIngestNotes}
             activeOpacity={0.85}
           >
-            <Sparkles size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-            <Text style={styles.ingestSaveButtonText}>
-              યાદ સાચવો ({activeMember.name} તરીકે)
-            </Text>
+            <Text style={styles.primaryButtonText}>સ્મૃતિ સાચવો</Text>
           </TouchableOpacity>
-        </View>
 
-        <View style={{ height: 30 }} />
+          {ingestSuccess && (
+            <View style={styles.successBanner}>
+              <CheckCircle2 size={16} color={Colors.success} />
+              <Text style={styles.successText}>
+                સ્મૃતિ સફળતાપૂર્વક સાચવી લેવાઈ છે!
+              </Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
 
-      {/* Add Member Modal */}
+      {/* Add Member Modal (iOS Sheet) */}
       <Modal
         visible={showAddMemberModal}
         animationType="slide"
-        transparent
+        presentationStyle="pageSheet"
         onRequestClose={() => setShowAddMemberModal(false)}
       >
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeaderRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <UserPlus size={20} color={Colors.primary} />
-                <Text style={styles.modalHeaderTitle}>નવો પરિવાર સભ્ય ઉમેરો</Text>
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowAddMemberModal(false)} activeOpacity={0.7}>
+              <Text style={styles.modalCancel}>રદ કરો</Text>
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>નવું સભ્ય ઉમેરો</Text>
+            <TouchableOpacity onPress={handleAddMember} activeOpacity={0.7}>
+              <Text style={styles.modalSave}>ઉમેરો</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+            <View style={styles.groupedTable}>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>સભ્યનું નામ</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="ઉદા. જયરાજ"
+                  placeholderTextColor={Colors.textMuted}
+                  value={newMemberName}
+                  onChangeText={setNewMemberName}
+                />
               </View>
-              <TouchableOpacity onPress={() => setShowAddMemberModal(false)}>
-                <X size={20} color={Colors.textMuted} />
-              </TouchableOpacity>
+
+              <View style={styles.tableDivider} />
+
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>દાદીમા શું કહીને બોલાવે?</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="ઉદા. દિકરા"
+                  placeholderTextColor={Colors.textMuted}
+                  value={newMemberCall}
+                  onChangeText={setNewMemberCall}
+                />
+              </View>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.modalInputLabel}>સભ્યનું નામ (Name)</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="દા.ત. અલ્પા, જયદીપ, કાવ્યા"
-                placeholderTextColor={Colors.textMuted}
-                value={newMemberName}
-                onChangeText={setNewMemberName}
-              />
-
-              <Text style={styles.modalInputLabel}>દાદીમા સાથે સગપણ (Kinship)</Text>
-              <View style={styles.kinshipSelectionContainer}>
-                {KINSHIP_SUGGESTIONS.map((k) => {
-                  const isSelected = newMemberKinship === k.label;
-                  return (
-                    <TouchableOpacity
-                      key={k.label}
-                      style={[styles.kinshipChip, isSelected && styles.kinshipChipActive]}
-                      onPress={() => {
-                        setNewMemberKinship(k.label);
-                        setNewMemberCall(k.call);
-                      }}
-                    >
-                      <Text style={[styles.kinshipChipText, isSelected && styles.kinshipChipTextActive]}>
-                        {k.label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <Text style={styles.modalInputLabel}>માઁ નું સંબોધન (Call Name Prefix)</Text>
-              <TextInput
-                style={styles.modalInput}
-                placeholder="દિકરા, ભાઈ, વહુ બેટા, દીકરી..."
-                placeholderTextColor={Colors.textMuted}
-                value={newMemberCall}
-                onChangeText={setNewMemberCall}
-              />
-
-              <TouchableOpacity
-                style={styles.saveMemberBtn}
-                onPress={handleAddMember}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.saveMemberBtnText}>પરિવારમાં સામેલ કરો</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
+            <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>
+              સંબંધ પસંદ કરો:
+            </Text>
+            <View style={styles.kinshipPills}>
+              {KINSHIP_SUGGESTIONS.map((k) => {
+                const isSelected = newMemberKinship === k.label;
+                return (
+                  <TouchableOpacity
+                    key={k.label}
+                    style={[styles.kinshipPill, isSelected && styles.kinshipPillActive]}
+                    onPress={() => {
+                      setNewMemberKinship(k.label);
+                      setNewMemberCall(k.call);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.kinshipPillText, isSelected && styles.kinshipPillTextActive]}>
+                      {k.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -306,323 +304,219 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 30,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing['3xl'],
   },
-  headerCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    marginBottom: 20,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+  header: {
+    marginBottom: Spacing.lg,
   },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 6,
+  title: {
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    letterSpacing: -0.4,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: Colors.primary,
-  },
-  headerDesc: {
-    fontSize: 13,
+  subtitle: {
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
-    lineHeight: 19,
+    marginTop: 2,
+  },
+  section: {
+    marginBottom: Spacing.xl,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: Spacing.xs + 2,
   },
   sectionTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: Colors.textPrimary,
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-  sectionSubtitle: {
-    fontSize: 12,
+  sectionHint: {
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
-    marginTop: 1,
+    marginBottom: Spacing.sm,
   },
-  addMemberBtn: {
+  headerAction: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 14,
+    gap: 4,
   },
-  addMemberBtnText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
+  headerActionText: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.primary,
   },
-  membersGrid: {
-    gap: 12,
-    marginBottom: 24,
-  },
-  memberCard: {
+  groupedTable: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 14,
-    borderWidth: 1.5,
+    borderRadius: BorderRadius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    overflow: 'hidden',
   },
-  memberCardActive: {
-    borderColor: Colors.secondary,
-    backgroundColor: '#FFFDF7',
-    borderWidth: 2,
-  },
-  memberCardTop: {
+  memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 4,
+    gap: Spacing.md,
   },
-  avatarCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FAF5EE',
+  memberRowActive: {
+    backgroundColor: '#F9F9FB',
+  },
+  memberAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F2F2F7',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
-  avatarCircleActive: {
-    backgroundColor: '#FFF4D6',
-    borderColor: Colors.borderGold,
+  memberInitial: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.primary,
   },
-  activeSpeakerBadge: {
+  memberInfo: {
+    flex: 1,
+  },
+  memberNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#E7F2EB',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
+    gap: Spacing.xs,
   },
-  activeSpeakerText: {
-    fontSize: 11,
-    fontWeight: '800',
+  memberName: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+  },
+  activePill: {
+    backgroundColor: '#EBF7EE',
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: BorderRadius.full,
+  },
+  activePillText: {
+    fontSize: Typography.fontSize.xs - 2,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.success,
   },
-  memberCardName: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: Colors.textPrimary,
-  },
-  memberCardKinship: {
-    fontSize: 13,
+  memberSub: {
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
-    fontWeight: '600',
-    marginTop: 1,
-  },
-  memberCallBox: {
-    backgroundColor: '#FAF5EE',
-    padding: 8,
-    borderRadius: 10,
-    marginTop: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  memberCallLabel: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    fontWeight: '700',
-    marginRight: 4,
-  },
-  memberCallValue: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: Colors.primary,
-    fontStyle: 'italic',
-  },
-  ingestCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 22,
-    padding: 18,
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  ingestHeaderRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  ingestIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFF4D6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
-  },
-  ingestTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  ingestSubtitle: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    lineHeight: 16,
     marginTop: 2,
   },
-  ingestTopicInput: {
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    fontSize: 14,
-    color: Colors.textPrimary,
-    marginBottom: 10,
+  tableDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.divider,
+    marginLeft: 56,
   },
-  ingestTextInput: {
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 14,
+  inputRow: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  inputLabel: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  textInput: {
+    fontSize: Typography.fontSize.sm,
     color: Colors.textPrimary,
-    height: 80,
+    paddingVertical: 4,
+  },
+  textArea: {
+    minHeight: 70,
     textAlignVertical: 'top',
-    marginBottom: 10,
   },
-  successPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E7F2EB',
-    padding: 8,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  successPillText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.success,
-  },
-  ingestSaveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  primaryButton: {
     backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 12,
+    borderRadius: BorderRadius.lg,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.md,
   },
-  ingestSaveButtonText: {
+  primaryButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(31, 18, 12, 0.65)',
-    justifyContent: 'flex-end',
-  },
-  modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    padding: 20,
-    maxHeight: '88%',
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-  },
-  modalHeaderRow: {
+  successBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
+    gap: Spacing.xs,
+    marginTop: Spacing.sm,
+    justifyContent: 'center',
   },
-  modalHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+  successText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.success,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.divider,
+    backgroundColor: '#FFFFFF',
+  },
+  modalCancel: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+  },
+  modalTitle: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+  },
+  modalSave: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.primary,
   },
-  modalInputLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: 6,
-    marginTop: 8,
+  modalBody: {
+    flex: 1,
+    padding: Spacing.lg,
   },
-  modalInput: {
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  kinshipSelectionContainer: {
+  kinshipPills: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginVertical: 4,
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
   },
-  kinshipChip: {
-    backgroundColor: '#F5ECE3',
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 14,
-    borderWidth: 1,
+  kinshipPill: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
   },
-  kinshipChipActive: {
+  kinshipPillActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
-  kinshipChipText: {
-    fontSize: 12,
-    fontWeight: '600',
+  kinshipPillText: {
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
   },
-  kinshipChipTextActive: {
+  kinshipPillTextActive: {
     color: '#FFFFFF',
-    fontWeight: '700',
-  },
-  saveMemberBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 18,
-    marginBottom: 20,
-  },
-  saveMemberBtnText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
+    fontWeight: Typography.fontWeight.semibold,
   },
 });

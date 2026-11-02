@@ -1,8 +1,10 @@
 /**
- * Screen: Main Conversation (વાતચીત - Baat)
- *
- * Royal heirloom conversational experience with Kathiyawadi Maa.
- * Uses sleek Lucide icons for all UI elements.
+ * Screen: Main Conversation (વાતચીત)
+ * Apple-Inspired Quiet Luxury:
+ * - Dignified portrait focal point
+ * - Intimate, distraction-free conversation space
+ * - Tactile one-handed voice & text interaction
+ * - Refined family member switcher
  */
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -11,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
+import { Typography, Spacing, BorderRadius, Shadow } from '../../constants/Typography';
 import { useConversationStore } from '../../stores/conversation';
 import { useAuthStore } from '../../stores/auth';
 import { AvatarDisplay } from '../../components/avatar/AvatarDisplay';
@@ -19,27 +22,21 @@ import { ConversationBubble } from '../../components/conversation/ConversationBu
 import { StatusIndicator } from '../../components/conversation/StatusIndicator';
 import { audioService } from '../../services/audio';
 import {
-  Users,
   ChevronDown,
-  ScrollText,
+  MessageSquare,
   Send,
-  Sparkles,
-  UtensilsCrossed,
-  HeartHandshake,
-  Compass,
   Check,
   X,
-  MessageSquare,
   AlertCircle,
-  UserCheck,
+  User,
 } from 'lucide-react-native';
 
 const QUICK_PROMPTS = [
-  { icon: HeartHandshake, text: 'કેમ છો દાદીમા? મજામાં ને?' },
-  { icon: UtensilsCrossed, text: 'બાજરાના રોટલાની રીત કહો ને!' },
-  { icon: Compass, text: 'ગોંડલના મેળાની જૂની યાદ તાજી કરો' },
-  { icon: Sparkles, text: 'જીવનમાં સુખી થવા માટે શીખામણ આપો' },
-  { icon: HeartHandshake, text: 'દાદીમા, મને તમારો આશીર્વાદ આપો' },
+  'કેમ છો દાદીમા? મજામાં ને?',
+  'બાજરાના રોટલાની રીત કહો ને',
+  'ગોંડલના મેળાની જૂની યાદ તાજી કરો',
+  'જીવનમાં સુખી થવા માટે શીખામણ આપો',
+  'દાદીમા, મને તમારો આશીર્વાદ આપો',
 ];
 
 export default function ConversationScreen() {
@@ -130,92 +127,84 @@ export default function ConversationScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardContainer}
       >
-        {/* Top Family Member Identity Bar */}
-        <View style={styles.topMemberBar}>
+        {/* Top Minimal Member Bar */}
+        <View style={styles.topBar}>
           <TouchableOpacity
-            style={styles.memberBadgeButton}
+            style={styles.memberPill}
             onPress={() => setShowMemberModal(true)}
-            activeOpacity={0.8}
+            activeOpacity={0.7}
           >
-            <View style={styles.memberIconBadge}>
-              <Users size={16} color={Colors.primary} />
-            </View>
-            <View style={styles.memberBadgeTextGroup}>
-              <Text style={styles.memberBadgeLabel}>વાત કરનાર સભ્ય</Text>
-              <Text style={styles.memberBadgeName} numberOfLines={1}>
-                {activeMember.name} • <Text style={styles.memberBadgeKinship}>{activeMember.kinship}</Text>
-              </Text>
-            </View>
-            <ChevronDown size={16} color={Colors.primary} style={{ marginLeft: 4 }} />
+            <User size={14} color={Colors.textSecondary} />
+            <Text style={styles.memberNameText}>
+              {activeMember.name} <Text style={styles.memberKinshipText}>({activeMember.kinship})</Text>
+            </Text>
+            <ChevronDown size={14} color={Colors.textMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.transcriptToggle}
+            style={[styles.transcriptPill, isTranscriptVisible && styles.transcriptPillActive]}
             onPress={toggleTranscript}
             activeOpacity={0.7}
           >
-            <ScrollText size={16} color={Colors.textSecondary} style={{ marginRight: 5 }} />
-            <Text style={styles.transcriptToggleText}>
+            <MessageSquare
+              size={14}
+              color={isTranscriptVisible ? Colors.primary : Colors.textMuted}
+            />
+            <Text
+              style={[
+                styles.transcriptPillText,
+                isTranscriptVisible && styles.transcriptPillTextActive,
+              ]}
+            >
               {isTranscriptVisible ? 'સંતાડો' : 'વાતો જુઓ'}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Scrollable Main Area */}
+        {/* Scrollable Conversation Workspace */}
         <ScrollView
           ref={scrollRef}
           style={styles.scrollArea}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           {/* Portrait & Spiritual Presence Frame */}
           <View style={styles.portraitSection}>
-            <View style={styles.portraitAuraRing}>
-              <AvatarDisplay />
-            </View>
-
-            <View style={styles.statusBadgeContainer}>
+            <AvatarDisplay />
+            <View style={styles.statusRow}>
               <StatusIndicator status={status} />
             </View>
-
             <Text style={styles.addressTagline}>
-              માઁ તમને <Text style={styles.addressNameBold}>"{activeMember.callName}"</Text> કહીને વહાલથી બોલાવે છે
+              સંબોધન: <Text style={styles.addressNameBold}>«{activeMember.callName}»</Text>
             </Text>
           </View>
 
           {/* Quick Prompts Carousel */}
-          <View style={styles.promptsContainer}>
-            <View style={styles.promptsHeaderRow}>
-              <Sparkles size={14} color={Colors.textGold} />
-              <Text style={styles.promptsHeader}>પૂછવા માટેના પ્રશ્નો (Quick Topics):</Text>
-            </View>
+          <View style={styles.promptsSection}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.promptsScroll}
+              contentContainerStyle={styles.promptsRow}
             >
-              {QUICK_PROMPTS.map((prompt, index) => {
-                const IconComponent = prompt.icon;
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.promptChip}
-                    onPress={() => handleSendPrompt(prompt.text)}
-                    disabled={isProcessing}
-                    activeOpacity={0.75}
-                  >
-                    <IconComponent size={14} color={Colors.primary} style={{ marginRight: 6 }} />
-                    <Text style={styles.promptChipText}>{prompt.text}</Text>
-                  </TouchableOpacity>
-                );
-              })}
+              {QUICK_PROMPTS.map((prompt, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.promptChip}
+                  onPress={() => handleSendPrompt(prompt)}
+                  disabled={isProcessing}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.promptChipText}>{prompt}</Text>
+                </TouchableOpacity>
+              ))}
             </ScrollView>
           </View>
 
-          {/* Error Message */}
+          {/* Error Banner */}
           {error ? (
             <View style={styles.errorBanner}>
-              <AlertCircle size={16} color={Colors.error} />
+              <AlertCircle size={15} color={Colors.error} />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           ) : null}
@@ -225,12 +214,9 @@ export default function ConversationScreen() {
             <View style={styles.transcriptSection}>
               {turns.length === 0 ? (
                 <View style={styles.emptyConversationBox}>
-                  <View style={styles.emptyIconCircle}>
-                    <MessageSquare size={26} color={Colors.secondary} />
-                  </View>
                   <Text style={styles.emptyTitle}>વાતચીત શરૂ કરો</Text>
                   <Text style={styles.emptyDesc}>
-                    નીચેના માઇક બટન પર ટેપ કરીને બોલો અથવા સંદેશો લખો. દાદીમા સાંભળી રહ્યા છે.
+                    માઇક બટન દબાવીને બોલો અથવા નીચે સંદેશ લખો.
                   </Text>
                 </View>
               ) : (
@@ -242,12 +228,12 @@ export default function ConversationScreen() {
           )}
         </ScrollView>
 
-        {/* Bottom Interactive Voice & Text Controls */}
-        <View style={styles.bottomControlBar}>
-          <View style={styles.textInputRow}>
+        {/* Bottom Input & Voice Interaction Bar */}
+        <View style={styles.bottomBar}>
+          <View style={styles.inputContainer}>
             <TextInput
-              style={styles.textInputField}
-              placeholder={`દાદીમાને કંઈક પૂછો (${activeMember.name})...`}
+              style={styles.inputField}
+              placeholder={`સંદેશ લખો (${activeMember.name})...`}
               placeholderTextColor={Colors.textMuted}
               value={textInput}
               onChangeText={setTextInput}
@@ -255,19 +241,19 @@ export default function ConversationScreen() {
               returnKeyType="send"
               editable={!isProcessing}
             />
-            {textInput.trim().length > 0 ? (
+            {textInput.trim().length > 0 && (
               <TouchableOpacity
-                style={styles.sendTextButton}
+                style={styles.sendButton}
                 onPress={handleSendText}
                 disabled={isProcessing}
                 activeOpacity={0.8}
               >
                 <Send size={15} color="#FFFFFF" />
               </TouchableOpacity>
-            ) : null}
+            )}
           </View>
 
-          <View style={styles.voiceButtonRow}>
+          <View style={styles.voiceControl}>
             <VoiceButton
               status={status}
               onPress={handleVoicePress}
@@ -276,7 +262,7 @@ export default function ConversationScreen() {
           </View>
         </View>
 
-        {/* Member Switcher Modal */}
+        {/* Member Switcher Modal (iOS Bottom Sheet Style) */}
         <Modal
           visible={showMemberModal}
           transparent
@@ -284,52 +270,49 @@ export default function ConversationScreen() {
           onRequestClose={() => setShowMemberModal(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalCard}>
-              <View style={styles.modalHeaderRow}>
-                <Text style={styles.modalTitle}>પરિવારના સભ્ય બદલો</Text>
-                <TouchableOpacity onPress={() => setShowMemberModal(false)}>
+            <View style={styles.sheetContainer}>
+              <View style={styles.sheetHandle} />
+
+              <View style={styles.sheetHeader}>
+                <Text style={styles.sheetTitle}>કોણ વાતચીત કરે છે?</Text>
+                <TouchableOpacity onPress={() => setShowMemberModal(false)} activeOpacity={0.7}>
                   <X size={20} color={Colors.textMuted} />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.modalSubtitle}>
-                દાદીમા સાથે કોણ વાતચીત કરી રહ્યું છે તે પસંદ કરો:
-              </Text>
 
-              <ScrollView style={styles.membersList}>
+              <ScrollView style={styles.memberList}>
                 {familyMembers.map((m) => {
                   const isCurrent = m.id === activeMember.id;
                   return (
                     <TouchableOpacity
                       key={m.id}
-                      style={[styles.memberItem, isCurrent && styles.memberItemActive]}
+                      style={[styles.memberRow, isCurrent && styles.memberRowActive]}
                       onPress={() => {
                         setActiveMember(m.id);
                         setShowMemberModal(false);
                       }}
-                      activeOpacity={0.8}
+                      activeOpacity={0.7}
                     >
-                      <View style={styles.memberAvatarCircle}>
-                        <UserCheck size={20} color={isCurrent ? Colors.primary : Colors.textMuted} />
-                      </View>
-                      <View style={styles.memberItemInfo}>
-                        <Text style={[styles.memberItemName, isCurrent && styles.memberItemNameActive]}>
-                          {m.name}
+                      <View style={styles.memberAvatar}>
+                        <Text style={styles.memberInitial}>
+                          {m.name.charAt(0)}
                         </Text>
-                        <Text style={styles.memberItemKinship}>{m.kinship}</Text>
-                        <Text style={styles.memberItemCall}>સંબોધન: "{m.callName}"</Text>
                       </View>
-                      {isCurrent ? <Check size={20} color={Colors.secondary} strokeWidth={2.6} /> : null}
+
+                      <View style={styles.memberDetails}>
+                        <Text style={styles.memberName}>{m.name}</Text>
+                        <Text style={styles.memberSub}>
+                          {m.kinship} • સંબોધન: «{m.callName}»
+                        </Text>
+                      </View>
+
+                      {isCurrent && (
+                        <Check size={18} color={Colors.primary} strokeWidth={2.5} />
+                      )}
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
-
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={() => setShowMemberModal(false)}
-              >
-                <Text style={styles.modalCloseText}>પૂર્ણ (Done)</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </Modal>
@@ -346,344 +329,248 @@ const styles = StyleSheet.create({
   keyboardContainer: {
     flex: 1,
   },
-  topMemberBar: {
+  topBar: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderGold,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 2,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.divider,
   },
-  memberBadgeButton: {
+  memberPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF5EE',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
-    maxWidth: '72%',
+    backgroundColor: '#F2F2F7',
+    paddingHorizontal: Spacing.sm + 4,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: BorderRadius.full,
+    gap: 6,
   },
-  memberIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FFF4D6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  memberBadgeTextGroup: {
-    flexShrink: 1,
-  },
-  memberBadgeLabel: {
-    fontSize: 9,
-    color: Colors.textGold,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-  },
-  memberBadgeName: {
-    fontSize: 13,
-    fontWeight: '800',
+  memberNameText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.textPrimary,
   },
-  memberBadgeKinship: {
-    fontWeight: '500',
+  memberKinshipText: {
+    fontWeight: Typography.fontWeight.regular,
     color: Colors.textSecondary,
   },
-  transcriptToggle: {
+  transcriptPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: '#FAF5EE',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    paddingHorizontal: Spacing.sm + 2,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: BorderRadius.full,
+    gap: 4,
   },
-  transcriptToggleText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.textSecondary,
+  transcriptPillActive: {
+    backgroundColor: '#F2F2F7',
+  },
+  transcriptPillText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  transcriptPillTextActive: {
+    color: Colors.textPrimary,
   },
   scrollArea: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 24,
+    paddingVertical: Spacing.md,
   },
   portraitSection: {
     alignItems: 'center',
-    marginVertical: 10,
+    paddingVertical: Spacing.md,
   },
-  portraitAuraRing: {
-    padding: 8,
-    borderRadius: 90,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2.5,
-    borderColor: Colors.borderGold,
-    shadowColor: Colors.secondary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 5,
-  },
-  statusBadgeContainer: {
-    marginTop: 10,
-    alignItems: 'center',
+  statusRow: {
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   addressTagline: {
-    fontSize: 13,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
-    fontStyle: 'italic',
-    marginTop: 6,
-    textAlign: 'center',
+    marginTop: 2,
   },
   addressNameBold: {
-    fontWeight: '800',
-    color: Colors.primary,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
   },
-  promptsContainer: {
-    marginTop: 14,
-    marginBottom: 8,
+  promptsSection: {
+    marginVertical: Spacing.sm,
   },
-  promptsHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 6,
-  },
-  promptsHeader: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  promptsScroll: {
-    gap: 8,
-    paddingVertical: 2,
+  promptsRow: {
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.xs + 2,
   },
   promptChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    shadowColor: '#000',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm - 1,
+    borderRadius: BorderRadius.full,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOpacity: 0.03,
+    shadowRadius: 2,
     elevation: 1,
   },
   promptChipText: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: Typography.fontSize.xs,
     color: Colors.textPrimary,
+    fontWeight: Typography.fontWeight.medium,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FDECEB',
-    padding: 10,
-    borderRadius: 10,
-    marginVertical: 8,
-    borderWidth: 1,
-    borderColor: Colors.error,
+    backgroundColor: '#FFF2F2',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#FFD2D2',
+    borderRadius: BorderRadius.md,
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.xs,
+    padding: Spacing.sm,
+    gap: Spacing.xs,
   },
   errorText: {
+    fontSize: Typography.fontSize.xs,
     color: Colors.error,
-    fontSize: 13,
-    fontWeight: '600',
     flex: 1,
   },
   transcriptSection: {
-    marginTop: 10,
+    paddingTop: Spacing.sm,
   },
   emptyConversationBox: {
     alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
-    marginTop: 8,
-  },
-  emptyIconCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#FFF4D6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.xl,
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Colors.primary,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
     marginBottom: 4,
   },
   emptyDesc: {
-    fontSize: 13,
-    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
     textAlign: 'center',
-    lineHeight: 19,
   },
-  bottomControlBar: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderGold,
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: Platform.OS === 'ios' ? 14 : 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 4,
+  bottomBar: {
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.divider,
+    backgroundColor: Colors.background,
   },
-  textInputRow: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF5EE',
-    borderRadius: 22,
-    borderWidth: 1.5,
+    backgroundColor: '#FFFFFF',
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
-    paddingHorizontal: 14,
-    paddingVertical: Platform.OS === 'ios' ? 6 : 2,
-    marginBottom: 8,
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.md,
+    height: 42,
+    marginBottom: Spacing.xs,
   },
-  textInputField: {
+  inputField: {
     flex: 1,
-    fontSize: 15,
+    fontSize: Typography.fontSize.sm,
     color: Colors.textPrimary,
-    paddingVertical: 8,
+    paddingVertical: 0,
   },
-  sendTextButton: {
+  sendButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: Colors.primary,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 6,
+    marginLeft: Spacing.xs,
   },
-  voiceButtonRow: {
+  voiceControl: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(31, 18, 12, 0.6)',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    justifyContent: 'flex-end',
   },
-  modalCard: {
+  sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 20,
-    maxHeight: '80%',
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 8,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing['2xl'],
+    maxHeight: '65%',
   },
-  modalHeaderRow: {
+  sheetHandle: {
+    width: 36,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#E5E5EA',
+    alignSelf: 'center',
+    marginBottom: Spacing.sm,
+  },
+  sheetHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  modalSubtitle: {
-    fontSize: 13,
-    color: Colors.textMuted,
-    marginBottom: 16,
-  },
-  membersList: {
-    maxHeight: 280,
-  },
-  memberItem: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 14,
-    backgroundColor: '#FAF5EE',
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.divider,
   },
-  memberItemActive: {
-    backgroundColor: '#FFF8E7',
-    borderColor: Colors.secondary,
-  },
-  memberAvatarCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginRight: 12,
-  },
-  memberItemInfo: {
-    flex: 1,
-  },
-  memberItemName: {
-    fontSize: 15,
-    fontWeight: '700',
+  sheetTitle: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.textPrimary,
   },
-  memberItemNameActive: {
-    color: Colors.primary,
-    fontWeight: '800',
+  memberList: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xs,
   },
-  memberItemKinship: {
-    fontSize: 12,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  memberItemCall: {
-    fontSize: 11,
-    color: Colors.textGold,
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
-  modalCloseButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 14,
-    paddingVertical: 12,
+  memberRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 12,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.divider,
+    gap: Spacing.md,
   },
-  modalCloseText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '700',
+  memberRowActive: {
+    backgroundColor: '#FAFAF9',
+  },
+  memberAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F2F2F7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  memberInitial: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.primary,
+  },
+  memberDetails: {
+    flex: 1,
+  },
+  memberName: {
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+  },
+  memberSub: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
 });

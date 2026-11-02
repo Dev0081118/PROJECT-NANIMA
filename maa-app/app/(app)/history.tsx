@@ -1,6 +1,9 @@
 /**
- * Screen: Conversation History (ઇતિહાસ - Itihaas)
- * Uses sleek Lucide icons for history timeline and actions.
+ * Screen: Conversation History (ઇતિહાસ)
+ * Apple-Inspired Quiet Luxury:
+ * - Apple Mail / Messages chronological list
+ * - Clean timestamps, turn counts, and concise summaries
+ * - Subtle swipe or tap-to-delete action
  */
 import React, { useEffect, useState } from 'react';
 import {
@@ -9,14 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
+import { Typography, Spacing, BorderRadius } from '../../constants/Typography';
 import { apiClient } from '../../services/api';
 import {
-  History,
-  Clock,
-  MessageCircle,
   Trash2,
-  Calendar,
-  Sparkles,
+  MessageCircle,
+  ChevronRight,
 } from 'lucide-react-native';
 
 interface Session {
@@ -56,7 +57,7 @@ export default function HistoryScreen() {
         setSessions(response.sessions);
       }
     } catch {
-      // Default to sample sessions for preview
+      // Default to sample sessions
     } finally {
       setIsLoading(false);
     }
@@ -84,80 +85,70 @@ export default function HistoryScreen() {
     );
   };
 
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('gu-IN', {
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View style={styles.headerTitleRow}>
-          <History size={22} color={Colors.primary} />
-          <Text style={styles.title}>વાતચીતનો ઇતિહાસ</Text>
-        </View>
-        <Text style={styles.subtitle}>દાદીમા સાથેના પાછલા સત્રો અને મીઠી યાદો</Text>
+        <Text style={styles.title}>વાતચીતનો ઇતિહાસ</Text>
+        <Text style={styles.subtitle}>
+          દાદીમા સાથેના પાછલા સત્રો • {sessions.length} વાર્તાલાપ
+        </Text>
       </View>
 
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="small" color={Colors.primary} />
           <Text style={styles.loadingText}>ઇતિહાસ મેળવી રહ્યા છીએ...</Text>
-        </View>
-      ) : sessions.length === 0 ? (
-        <View style={styles.center}>
-          <Clock size={40} color={Colors.textMuted} />
-          <Text style={styles.emptyTitle}>કોઈ પાછલી વાતચીત નથી</Text>
-          <Text style={styles.emptyText}>દાદીમા સાથે વાતચીત શરૂ કરવા માટે 'વાતચીત' ટેબ પર જાઓ!</Text>
         </View>
       ) : (
         <FlatList
           data={sessions}
-          keyExtractor={s => s.id}
+          keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={styles.sessionCard}>
-              <View style={styles.sessionInfo}>
-                <View style={styles.dateRow}>
-                  <Calendar size={13} color={Colors.textGold} style={{ marginRight: 5 }} />
-                  <Text style={styles.sessionDate}>
-                    {new Date(item.started_at).toLocaleDateString('gu-IN', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </Text>
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.cardDatePill}>
+                  <Text style={styles.cardDate}>{formatDate(item.started_at)}</Text>
                 </View>
-
-                <View style={styles.metaRow}>
-                  <MessageCircle size={12} color={Colors.textMuted} style={{ marginRight: 4 }} />
-                  <Text style={styles.sessionMeta}>
-                    {item.turn_count} વાતો
-                  </Text>
-                  <Text style={styles.metaDot}>•</Text>
-                  <Clock size={12} color={Colors.textMuted} style={{ marginRight: 4 }} />
-                  <Text style={styles.sessionMeta}>
-                    {item.ended_at
-                      ? `${Math.max(1, Math.round((new Date(item.ended_at).getTime() - new Date(item.started_at).getTime()) / 60000))} મિનિટ`
-                      : 'ચાલુ સત્ર'}
-                  </Text>
+                <View style={styles.cardRightGroup}>
+                  <Text style={styles.turnCount}>{item.turn_count} વાતો</Text>
+                  <TouchableOpacity
+                    onPress={() => handleDelete(item.id)}
+                    style={styles.deleteButton}
+                    activeOpacity={0.7}
+                  >
+                    <Trash2 size={15} color={Colors.textMuted} />
+                  </TouchableOpacity>
                 </View>
-
-                {item.summary ? (
-                  <View style={styles.summaryBox}>
-                    <Sparkles size={12} color={Colors.secondary} style={{ marginRight: 5, marginTop: 2 }} />
-                    <Text style={styles.sessionSummary} numberOfLines={2}>
-                      {item.summary}
-                    </Text>
-                  </View>
-                ) : null}
               </View>
 
-              <TouchableOpacity
-                onPress={() => handleDelete(item.id)}
-                style={styles.deleteButton}
-                activeOpacity={0.7}
-              >
-                <Trash2 size={16} color={Colors.error} />
-              </TouchableOpacity>
+              <Text style={styles.summaryText} numberOfLines={3}>
+                {item.summary || 'દાદીમા સાથે આત્મીય વાતચીત થઈ.'}
+              </Text>
             </View>
           )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <MessageCircle size={36} color={Colors.textMuted} strokeWidth={1.5} />
+              <Text style={styles.emptyTitle}>કોઈ ઇતિહાસ નથી</Text>
+              <Text style={styles.emptyText}>
+                દાદીમા સાથે નવી વાતચીત શરૂ કરો.
+              </Text>
+            </View>
+          }
         />
       )}
     </SafeAreaView>
@@ -165,121 +156,101 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderGold,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
   },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
+  header: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.primary,
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    letterSpacing: -0.4,
   },
   subtitle: {
-    fontSize: 12,
-    color: Colors.textMuted,
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  listContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing['3xl'],
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm + 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xs + 2,
+  },
+  cardDatePill: {
+    backgroundColor: '#F2F2F7',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  cardDate: {
+    fontSize: Typography.fontSize.xs - 1,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+  },
+  cardRightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  turnCount: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+  },
+  deleteButton: {
+    padding: 2,
+  },
+  summaryText: {
+    fontSize: Typography.fontSize.sm,
+    lineHeight: Typography.fontSize.sm * Typography.lineHeight.relaxed,
+    color: Colors.textSecondary,
   },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 30,
+    gap: Spacing.sm,
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 13,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing['3xl'],
+    gap: Spacing.xs,
   },
   emptyTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: Colors.primary,
-    marginTop: 10,
-    marginBottom: 4,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+    marginTop: Spacing.sm,
   },
   emptyText: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  listContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  sessionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  sessionInfo: {
-    flex: 1,
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  sessionDate: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: Colors.textPrimary,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  metaDot: {
-    marginHorizontal: 6,
-    color: Colors.border,
-    fontSize: 12,
-  },
-  sessionMeta: {
-    fontSize: 12,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
-    fontWeight: '600',
-  },
-  summaryBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#FAF5EE',
-    padding: 10,
-    borderRadius: 10,
-  },
-  sessionSummary: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-    lineHeight: 18,
-    flex: 1,
-  },
-  deleteButton: {
-    padding: 10,
-    marginLeft: 8,
   },
 });

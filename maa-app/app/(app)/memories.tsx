@@ -1,7 +1,9 @@
 /**
- * Screen: Family Character Building & Memory Vault (યાદોનો ખજાનો - Yaadein)
- *
- * Collaborative family repository using sleek Lucide icons for all UI elements.
+ * Screen: Family Memory Vault & Character Building (યાદોનો ખજાનો)
+ * Apple-Inspired Quiet Luxury:
+ * - Editorial journal aesthetic
+ * - Intuitive family memory contribution (Add/Edit/Delete)
+ * - Restrained typography and clean segmented filters
  */
 import React, { useEffect, useState } from 'react';
 import {
@@ -11,32 +13,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
+import { Typography, Spacing, BorderRadius, Shadow } from '../../constants/Typography';
 import { useMemoryStore, Memory } from '../../stores/memory';
 import { useAuthStore } from '../../stores/auth';
+import { MemoryCard } from '../../components/memory/MemoryCard';
 import {
-  BookOpen,
   Plus,
   Search,
-  Sparkles,
-  UtensilsCrossed,
-  HeartHandshake,
-  Compass,
-  Scroll,
-  Quote,
-  UserCheck,
-  ShieldCheck,
-  Edit3,
-  Trash2,
   X,
-  FileQuestion,
+  BookOpen,
 } from 'lucide-react-native';
 
 const CATEGORIES = [
-  { key: null, label: 'બધી યાદો (All)', icon: Sparkles },
-  { key: 'PERSONALITY', label: 'રસોઈ & વાનગી (Food & Traits)', icon: UtensilsCrossed },
-  { key: 'VALUES', label: 'સંસ્કાર & મૂલ્યો (Values)', icon: HeartHandshake },
-  { key: 'PERSONAL', label: 'વાર્તાઓ & મેળાઓ (Stories)', icon: Compass },
-  { key: 'BIOGRAPHICAL', label: 'જીવનચરિત્ર (Life Facts)', icon: Scroll },
+  { key: null, label: 'બધી યાદો' },
+  { key: 'PERSONALITY', label: 'રસોઈ & સ્વભાવ' },
+  { key: 'VALUES', label: 'સંસ્કાર & મૂલ્યો' },
+  { key: 'PERSONAL', label: 'વાર્તાઓ & પ્રસંગ' },
+  { key: 'BIOGRAPHICAL', label: 'જીવનચરિત્ર' },
 ] as const;
 
 export default function MemoriesScreen() {
@@ -48,7 +41,7 @@ export default function MemoriesScreen() {
   const [formTitle, setFormTitle] = useState('');
   const [formContent, setFormContent] = useState('');
   const [formPhrase, setFormPhrase] = useState('');
-  const [formTone, setFormTone] = useState('પ્રેમાળ (Loving)');
+  const [formTone, setFormTone] = useState('પ્રેમાળ');
   const [formCategory, setFormCategory] = useState<Memory['category']>('PERSONALITY');
 
   const {
@@ -67,7 +60,7 @@ export default function MemoriesScreen() {
     setFormTitle('');
     setFormContent('');
     setFormPhrase('');
-    setFormTone('પ્રેમાળ (Loving)');
+    setFormTone('પ્રેમાળ');
     setFormCategory('PERSONALITY');
     setModalVisible(true);
   };
@@ -77,7 +70,7 @@ export default function MemoriesScreen() {
     setFormTitle(memory.title);
     setFormContent(memory.content);
     setFormPhrase(memory.characteristicPhrase || '');
-    setFormTone(memory.emotionalTone || 'પ્રેમાળ (Loving)');
+    setFormTone(memory.emotionalTone || 'પ્રેમાળ');
     setFormCategory(memory.category);
     setModalVisible(true);
   };
@@ -110,8 +103,8 @@ export default function MemoriesScreen() {
         emotionalTone: formTone.trim() || undefined,
         category: formCategory,
         contributedBy: contributor,
+        sourceDescription: 'પરિવાર સંસ્મરણ',
         impactOnPersona: impact,
-        sourceDescription: `${activeMember.name} દ્વારા કૌટુંબિક નોંધ`,
         familyApproved: true,
       });
     }
@@ -119,94 +112,77 @@ export default function MemoriesScreen() {
     setModalVisible(false);
   };
 
-  const handleDeletePrompt = (id: string, title: string) => {
-    Alert.alert(
-      'સ્મૃતિ કાઢી નાખો',
-      `શું તમે "${title}" ને ખજાનામાંથી કાઢી નાખવા માંગો છો?`,
-      [
-        { text: 'રદ કરો', style: 'cancel' },
-        {
-          text: 'કાઢી નાખો',
-          style: 'destructive',
-          onPress: () => deleteMemory(id),
-        },
-      ]
-    );
-  };
-
-  const filtered = memories.filter((m) => {
+  const filteredMemories = memories.filter(m => {
+    if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
-      !search ||
       m.title.toLowerCase().includes(q) ||
       m.content.toLowerCase().includes(q) ||
-      m.contributedBy?.toLowerCase().includes(q) ||
-      m.characteristicPhrase?.toLowerCase().includes(q)
+      (m.characteristicPhrase && m.characteristicPhrase.toLowerCase().includes(q))
     );
   });
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Header */}
+      {/* Top Header & Action */}
       <View style={styles.header}>
-        <View style={styles.headerRow}>
-          <View style={styles.titleGroup}>
-            <View style={styles.titleWithIcon}>
-              <BookOpen size={22} color={Colors.primary} />
-              <Text style={styles.headerTitle}>યાદોનો ખજાનો</Text>
-            </View>
-            <Text style={styles.headerSubtitle}>
-              ચરિત્ર નિર્માણ સંગ્રહ • {memories.length} કૌટુંબિક સ્મૃતિઓ
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.addStoryButton}
-            onPress={openAddModal}
-            activeOpacity={0.8}
-          >
-            <Plus size={15} color="#FFFFFF" strokeWidth={2.6} style={{ marginRight: 4 }} />
-            <Text style={styles.addStoryButtonText}>નવી યાદ ઉમેરો</Text>
-          </TouchableOpacity>
+        <View style={styles.headerTitleCol}>
+          <Text style={styles.title}>યાદોનો ખજાનો</Text>
+          <Text style={styles.subtitle}>
+            પરિવારના સંસ્મરણો • {memories.length} સ્મૃતિઓ
+          </Text>
         </View>
 
-        {/* Search Field */}
-        <View style={styles.searchRow}>
-          <Search size={16} color={Colors.textMuted} style={styles.searchIcon} />
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={openAddModal}
+          activeOpacity={0.8}
+        >
+          <Plus size={18} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>યાદ ઉમેરો</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* iOS Search Bar */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchBar}>
+          <Search size={16} color={Colors.textMuted} />
           <TextInput
             style={styles.searchInput}
+            placeholder="યાદો અથવા વાનગીઓ શોધો..."
+            placeholderTextColor={Colors.textMuted}
             value={search}
             onChangeText={setSearch}
-            placeholder="યાદો, વાનગી કે કહેવત શોધો..."
-            placeholderTextColor={Colors.textMuted}
+            clearButtonMode="while-editing"
           />
+          {search.length > 0 && (
+            <TouchableOpacity onPress={() => setSearch('')}>
+              <X size={16} color={Colors.textMuted} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
-      {/* Category Filter Carousel */}
-      <View style={styles.categoryContainer}>
+      {/* Category Filter Pills */}
+      <View style={styles.categoriesSection}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryContent}
+          contentContainerStyle={styles.categoriesRow}
         >
-          {CATEGORIES.map((item) => {
-            const isActive = selectedCategory === item.key;
-            const CategoryIcon = item.icon;
+          {CATEGORIES.map((cat) => {
+            const isSelected = selectedCategory === cat.key;
             return (
               <TouchableOpacity
-                key={String(item.key)}
-                style={[styles.categoryChip, isActive && styles.categoryChipActive]}
-                onPress={() => setCategory(item.key)}
-                activeOpacity={0.8}
+                key={cat.label}
+                style={[styles.categoryChip, isSelected && styles.categoryChipActive]}
+                onPress={() => setCategory(cat.key)}
+                activeOpacity={0.7}
               >
-                <CategoryIcon
-                  size={13}
-                  color={isActive ? '#FFFFFF' : Colors.primary}
-                  style={{ marginRight: 6 }}
-                />
-                <Text style={[styles.categoryChipText, isActive && styles.categoryChipTextActive]}>
-                  {item.label}
+                <Text
+                  style={[styles.categoryChipText, isSelected && styles.categoryChipTextActive]}
+                >
+                  {cat.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -214,171 +190,90 @@ export default function MemoriesScreen() {
         </ScrollView>
       </View>
 
-      {/* Main List */}
+      {/* Main Memory List */}
       {isLoading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="small" color={Colors.primary} />
           <Text style={styles.loadingText}>યાદો મેળવી રહ્યા છીએ...</Text>
-        </View>
-      ) : filtered.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <FileQuestion size={40} color={Colors.textMuted} />
-          <Text style={styles.emptyTitle}>કોઈ સ્મૃતિ મળી નથી</Text>
-          <Text style={styles.emptyDesc}>
-            {search
-              ? 'તમારા શોધ શબ્દ મુજબ કોઈ સ્મૃતિ નથી.'
-              : 'કુટુંબના કોઈપણ સભ્ય ઉપર "+ નવી યાદ ઉમેરો" પર ટેપ કરી દાદીમાના અનુભવો ઉમેરી શકે છે.'}
-          </Text>
         </View>
       ) : (
         <FlatList
-          data={filtered}
+          data={filteredMemories}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              {/* Card Header */}
-              <View style={styles.cardHeader}>
-                <View style={styles.categoryBadge}>
-                  <Text style={styles.categoryBadgeText}>{item.category}</Text>
-                </View>
-                <View style={styles.cardActionRow}>
-                  <TouchableOpacity
-                    style={styles.cardIconBtn}
-                    onPress={() => openEditModal(item)}
-                  >
-                    <Edit3 size={15} color={Colors.primary} style={{ marginRight: 3 }} />
-                    <Text style={styles.cardIconText}>સુધારો</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.cardIconBtn}
-                    onPress={() => handleDeletePrompt(item.id, item.title)}
-                  >
-                    <Trash2 size={16} color={Colors.error} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Title & Contributor Attribution */}
-              <Text style={styles.cardTitle}>{item.title}</Text>
-              {item.contributedBy ? (
-                <View style={styles.contributorRow}>
-                  <UserCheck size={13} color={Colors.textGold} style={{ marginRight: 4 }} />
-                  <Text style={styles.cardContributor}>
-                    ઉમેરનાર: <Text style={styles.contributorName}>{item.contributedBy}</Text>
-                  </Text>
-                </View>
-              ) : null}
-
-              {/* Story Content */}
-              <Text style={styles.cardContent}>{item.content}</Text>
-
-              {/* Characteristic Phrase (દાદીમાના શબ્દો) */}
-              {item.characteristicPhrase ? (
-                <View style={styles.phraseBox}>
-                  <View style={styles.phraseHeaderRow}>
-                    <Quote size={13} color={Colors.textGold} style={{ marginRight: 4 }} />
-                    <Text style={styles.phraseLabel}>દાદીમાના શબ્દો / કહેવત:</Text>
-                  </View>
-                  <Text style={styles.phraseText}>"{item.characteristicPhrase}"</Text>
-                </View>
-              ) : null}
-
-              {/* Persona Impact Box */}
-              {item.impactOnPersona ? (
-                <View style={styles.impactBox}>
-                  <Sparkles size={13} color={Colors.secondary} style={{ marginRight: 5 }} />
-                  <Text style={styles.impactText}>{item.impactOnPersona}</Text>
-                </View>
-              ) : null}
-
-              {/* Verified Pill */}
-              <View style={styles.cardFooter}>
-                <View style={styles.verifiedBadge}>
-                  <ShieldCheck size={13} color={Colors.success} style={{ marginRight: 4 }} />
-                  <Text style={styles.verifiedText}>કુટુંબ દ્વારા મંજૂર (Verified)</Text>
-                </View>
-                {item.emotionalTone ? (
-                  <Text style={styles.toneText}>સ્વભાવ: {item.emotionalTone}</Text>
-                ) : null}
-              </View>
-            </View>
+            <MemoryCard
+              memory={item}
+              onDelete={() => deleteMemory(item.id)}
+              onEdit={openEditModal}
+            />
           )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <BookOpen size={36} color={Colors.textMuted} strokeWidth={1.5} />
+              <Text style={styles.emptyTitle}>કોઈ યાદ મળી નથી</Text>
+              <Text style={styles.emptyText}>
+                {search ? 'બીજો શબ્દ શોધો' : 'નવી યાદ ઉમેરવા ઉપરના બટન પર ટેપ કરો.'}
+              </Text>
+            </View>
+          }
         />
       )}
 
-      {/* Add / Edit Memory Modal */}
+      {/* Add / Edit Memory Modal (iOS Sheet) */}
       <Modal
         visible={modalVisible}
         animationType="slide"
-        transparent
+        presentationStyle="pageSheet"
         onRequestClose={() => setModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalOverlay}>
+        <SafeAreaView style={styles.modalContainer}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            style={styles.modalKeyboard}
+            style={{ flex: 1 }}
           >
-            <View style={styles.modalCard}>
-              <View style={styles.modalHeaderRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Sparkles size={18} color={Colors.primary} />
-                  <Text style={styles.modalHeaderTitle}>
-                    {editingId ? 'સ્મૃતિમાં સુધારો કરો' : 'નવી યાદ ઉમેરો (ચરિત્ર નિર્માણ)'}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => setModalVisible(false)}>
-                  <X size={20} color={Colors.textMuted} />
-                </TouchableOpacity>
-              </View>
+            <View style={styles.modalHeader}>
+              <TouchableOpacity onPress={() => setModalVisible(false)} activeOpacity={0.7}>
+                <Text style={styles.modalCancel}>રદ કરો</Text>
+              </TouchableOpacity>
+              <Text style={styles.modalHeaderTitle}>
+                {editingId ? 'યાદ સુધારો' : 'નવી સ્મૃતિ ઉમેરો'}
+              </Text>
+              <TouchableOpacity onPress={handleSaveMemory} activeOpacity={0.7}>
+                <Text style={styles.modalSave}>સાચવો</Text>
+              </TouchableOpacity>
+            </View>
 
-              <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScroll}>
-                <Text style={styles.modalHelperText}>
-                  દાદીમાનો આ પ્રસંગ કે કહેવત વાતચીત વખતે એમની યાદશક્તિ અને સ્વભાવમાં ઉમેરાશે.
-                </Text>
+            <ScrollView
+              style={styles.modalBody}
+              contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={styles.modalHelperText}>
+                દાદીમા સાથેનો તમારો અનુભવ, જૂનો પ્રસંગ કે કોઈ વાનગીની રીત ઉમેરો. આ વિગતથી દાદીમાનું વ્યક્તિત્વ વધુ જીવંત બનશે.
+              </Text>
 
-                <View style={styles.modalInputGroup}>
-                  <Text style={styles.modalInputLabel}>પ્રસંગનું શીર્ષક (Title)</Text>
+              {/* Grouped Form Fields */}
+              <View style={styles.formGroup}>
+                <View style={styles.formRow}>
+                  <Text style={styles.fieldLabel}>શીર્ષક</Text>
                   <TextInput
-                    style={styles.modalInput}
-                    placeholder="દા.ત. દિવાળીના ઘૂઘરા અને હસવાની રીત"
+                    style={styles.inputField}
+                    placeholder="ઉદા. દિવાળીના ઘૂઘરા બનાવવાની રીત"
                     placeholderTextColor={Colors.textMuted}
                     value={formTitle}
                     onChangeText={setFormTitle}
                   />
                 </View>
 
-                <View style={styles.modalInputGroup}>
-                  <Text style={styles.modalInputLabel}>કેટેગરી પસંદ કરો</Text>
-                  <View style={styles.categoryPickerRow}>
-                    {(['PERSONALITY', 'VALUES', 'PERSONAL', 'BIOGRAPHICAL'] as const).map((cat) => (
-                      <TouchableOpacity
-                        key={cat}
-                        style={[
-                          styles.categoryPickerItem,
-                          formCategory === cat && styles.categoryPickerItemActive,
-                        ]}
-                        onPress={() => setFormCategory(cat)}
-                      >
-                        <Text
-                          style={[
-                            styles.categoryPickerText,
-                            formCategory === cat && styles.categoryPickerTextActive,
-                          ]}
-                        >
-                          {cat}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
+                <View style={styles.divider} />
 
-                <View style={styles.modalInputGroup}>
-                  <Text style={styles.modalInputLabel}>વિગતવાર વાત / અનુભવ (Story / Details)</Text>
+                <View style={styles.formRow}>
+                  <Text style={styles.fieldLabel}>અનુભવ / વાર્તા</Text>
                   <TextInput
-                    style={[styles.modalInput, styles.modalTextArea]}
-                    placeholder="દાદીમા તે સમયે શું કરતા, કેવો વ્યવહાર કરતા અને શીખામણ આપતા..."
+                    style={[styles.inputField, styles.textArea]}
+                    placeholder="પ્રસંગ કે યાદની વિગત લખો..."
                     placeholderTextColor={Colors.textMuted}
                     value={formContent}
                     onChangeText={setFormContent}
@@ -387,45 +282,46 @@ export default function MemoriesScreen() {
                   />
                 </View>
 
-                <View style={styles.modalInputGroup}>
-                  <Text style={styles.modalInputLabel}>દાદીમાના પ્રિય શબ્દો / કહેવત (Signature Quote)</Text>
+                <View style={styles.divider} />
+
+                <View style={styles.formRow}>
+                  <Text style={styles.fieldLabel}>યાદગાર કહેવત / તકિયાકલામ</Text>
                   <TextInput
-                    style={styles.modalInput}
-                    placeholder="દા.ત. ભાણિયા, ખાવામાં કોઈ દી સંકોચ ન રખાય!"
+                    style={styles.inputField}
+                    placeholder="ઉદા. 'ધીરજના ફળ મીઠા હોય બાપ'"
                     placeholderTextColor={Colors.textMuted}
                     value={formPhrase}
                     onChangeText={setFormPhrase}
                   />
                 </View>
+              </View>
 
-                <View style={styles.modalInputGroup}>
-                  <Text style={styles.modalInputLabel}>સ્વભાવ / લાગણી (Emotional Tone)</Text>
-                  <TextInput
-                    style={styles.modalInput}
-                    placeholder="પ્રેમાળ, રમૂજી, આધ્યાત્મિક, શિસ્તબદ્ધ..."
-                    placeholderTextColor={Colors.textMuted}
-                    value={formTone}
-                    onChangeText={setFormTone}
-                  />
-                </View>
+              {/* Category Picker */}
+              <Text style={styles.sectionTitle}>કેટેગરી પસંદ કરો</Text>
+              <View style={styles.categoryPickerRow}>
+                {CATEGORIES.filter(c => c.key !== null).map((cat) => {
+                  const isSelected = formCategory === cat.key;
+                  return (
+                    <TouchableOpacity
+                      key={cat.key}
+                      style={[styles.pickerChip, isSelected && styles.pickerChipActive]}
+                      onPress={() => setFormCategory(cat.key as Memory['category'])}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[styles.pickerChipText, isSelected && styles.pickerChipTextActive]}
+                      >
+                        {cat.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
-                <Text style={styles.contributorNotice}>
-                  આ સ્મૃતિ <Text style={styles.bold}>{activeMember.name} ({activeMember.kinship})</Text> તરીકે સાચવવામાં આવશે.
-                </Text>
-
-                <TouchableOpacity
-                  style={styles.saveMemoryButton}
-                  onPress={handleSaveMemory}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.saveMemoryButtonText}>
-                    {editingId ? 'ફેરફાર સાચવો' : 'ખજાનામાં ઉમેરો (Save Memory)'}
-                  </Text>
-                </TouchableOpacity>
-
-                <View style={{ height: 20 }} />
-              </ScrollView>
-            </View>
+              <Text style={styles.contributorNotice}>
+                ઉમેરનાર તરીકે: <Text style={{ fontWeight: '600' }}>{activeMember.name} ({activeMember.kinship})</Text> નોંધાશે.
+              </Text>
+            </ScrollView>
           </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
@@ -439,386 +335,227 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingTop: 10,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderGold,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  headerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.sm,
   },
-  titleGroup: {
+  headerTitleCol: {
     flex: 1,
   },
-  titleWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  title: {
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    letterSpacing: -0.4,
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: Colors.textMuted,
+  subtitle: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
     marginTop: 2,
   },
-  addStoryButton: {
+  addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm - 1,
+    borderRadius: BorderRadius.full,
+    gap: 4,
   },
-  addStoryButtonText: {
+  addButtonText: {
     color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '800',
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
   },
-  searchRow: {
+  searchSection: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xs,
+  },
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 12,
-  },
-  searchIcon: {
-    marginRight: 6,
+    backgroundColor: '#F2F2F7',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.sm + 2,
+    height: 38,
+    gap: Spacing.xs,
   },
   searchInput: {
     flex: 1,
-    paddingVertical: 8,
-    fontSize: 14,
+    fontSize: Typography.fontSize.sm,
     color: Colors.textPrimary,
+    paddingVertical: 0,
   },
-  categoryContainer: {
-    paddingVertical: 10,
-    backgroundColor: Colors.background,
+  categoriesSection: {
+    paddingVertical: Spacing.sm,
   },
-  categoryContent: {
-    paddingHorizontal: 16,
-    gap: 8,
+  categoriesRow: {
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.xs,
   },
   categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
-    borderRadius: 18,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs + 2,
+    borderRadius: BorderRadius.full,
   },
   categoryChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: Colors.secondary,
+    borderColor: Colors.secondary,
   },
   categoryChipText: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
+    fontWeight: Typography.fontWeight.medium,
   },
   categoryChipTextActive: {
     color: '#FFFFFF',
+    fontWeight: Typography.fontWeight.semibold,
   },
   listContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  categoryBadge: {
-    backgroundColor: '#FAF5EE',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  categoryBadgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: Colors.textGold,
-    textTransform: 'uppercase',
-  },
-  cardActionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  cardIconBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-  },
-  cardIconText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: Colors.primary,
-  },
-  cardTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: Colors.textPrimary,
-    marginBottom: 4,
-  },
-  contributorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cardContributor: {
-    fontSize: 11,
-    color: Colors.textMuted,
-  },
-  contributorName: {
-    color: Colors.textGold,
-    fontWeight: '700',
-  },
-  cardContent: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    lineHeight: 21,
-    marginBottom: 10,
-  },
-  phraseBox: {
-    backgroundColor: '#FFF8E7',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: Colors.borderGold,
-    marginBottom: 8,
-  },
-  phraseHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 2,
-  },
-  phraseLabel: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: Colors.textGold,
-  },
-  phraseText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: Colors.primary,
-    fontStyle: 'italic',
-  },
-  impactBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F5ECE3',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  impactText: {
-    fontSize: 11,
-    color: Colors.textSecondary,
-    fontStyle: 'italic',
-    flex: 1,
-  },
-  cardFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#FAF5EE',
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E7F2EB',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  verifiedText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: Colors.success,
-  },
-  toneText: {
-    fontSize: 11,
-    color: Colors.textMuted,
-    fontStyle: 'italic',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing['3xl'],
   },
   centerContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 30,
+    gap: Spacing.sm,
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 14,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing['3xl'],
+    gap: Spacing.xs,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: Colors.primary,
-    marginTop: 8,
-    marginBottom: 6,
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+    marginTop: Spacing.sm,
   },
-  emptyDesc: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
+  emptyText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
   },
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(31, 18, 12, 0.65)',
-    justifyContent: 'flex-end',
+    backgroundColor: Colors.background,
   },
-  modalKeyboard: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    padding: 20,
-    maxHeight: '90%',
-    borderWidth: 1.5,
-    borderColor: Colors.borderGold,
-  },
-  modalHeaderRow: {
+  modalHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: Colors.divider,
+    backgroundColor: '#FFFFFF',
+  },
+  modalCancel: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
   },
   modalHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: Typography.fontSize.base,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+  },
+  modalSave: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.semibold,
     color: Colors.primary,
   },
-  modalScroll: {
-    marginBottom: 10,
+  modalBody: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
   },
   modalHelperText: {
-    fontSize: 13,
+    fontSize: Typography.fontSize.xs,
     color: Colors.textMuted,
-    marginBottom: 16,
-    lineHeight: 18,
+    lineHeight: Typography.fontSize.xs * Typography.lineHeight.normal,
+    marginBottom: Spacing.md,
   },
-  modalInputGroup: {
-    marginBottom: 14,
-  },
-  modalInputLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-    marginBottom: 6,
-  },
-  modalInput: {
-    backgroundColor: '#FAF5EE',
-    borderWidth: 1.5,
+  formGroup: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: BorderRadius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: Colors.textPrimary,
+    overflow: 'hidden',
+    marginBottom: Spacing.lg,
   },
-  modalTextArea: {
-    height: 90,
+  formRow: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  fieldLabel: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  inputField: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textPrimary,
+    paddingVertical: Platform.OS === 'ios' ? 4 : 2,
+  },
+  textArea: {
+    minHeight: 80,
     textAlignVertical: 'top',
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: Colors.divider,
+    marginLeft: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
   categoryPickerRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: Spacing.xs,
+    marginBottom: Spacing.lg,
   },
-  categoryPickerItem: {
-    backgroundColor: '#F5ECE3',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
+  pickerChip: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: Colors.border,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
   },
-  categoryPickerItemActive: {
+  pickerChipActive: {
     backgroundColor: Colors.primary,
     borderColor: Colors.primary,
   },
-  categoryPickerText: {
-    fontSize: 12,
-    fontWeight: '700',
+  pickerChipText: {
+    fontSize: Typography.fontSize.xs,
     color: Colors.textSecondary,
+    fontWeight: Typography.fontWeight.medium,
   },
-  categoryPickerTextActive: {
+  pickerChipTextActive: {
     color: '#FFFFFF',
+    fontWeight: Typography.fontWeight.semibold,
   },
   contributorNotice: {
-    fontSize: 12,
-    color: Colors.textGold,
-    marginTop: 6,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  bold: {
-    fontWeight: '800',
-    color: Colors.primary,
-  },
-  saveMemoryButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  saveMemoryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
+    marginTop: Spacing.xs,
   },
 });
