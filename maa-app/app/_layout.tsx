@@ -4,23 +4,22 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { useAuthStore } from '../stores/auth';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const { loadStoredAuth, isLoading } = useAuthStore();
+  const { loadStoredAuth } = useAuthStore();
 
   useEffect(() => {
     loadStoredAuth().finally(() => {
-      SplashScreen.hideAsync();
+      SplashScreen.hideAsync().catch(() => {});
     });
   }, []);
-
-  if (isLoading) return null;
 
   return (
     <>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(app)" />
       </Stack>

@@ -1,24 +1,22 @@
 import '@testing-library/jest-native/extend-expect';
 
-jest.mock('expo-av', () => ({
-  Audio: {
-    requestPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
-    setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
-    Recording: jest.fn().mockImplementation(() => ({
-      prepareToRecordAsync: jest.fn().mockResolvedValue(undefined),
-      startAsync: jest.fn().mockResolvedValue(undefined),
-      stopAndUnloadAsync: jest.fn().mockResolvedValue(undefined),
-      getURI: jest.fn().mockReturnValue('file:///test.wav'),
-    })),
-    Sound: {
-      createAsync: jest.fn().mockResolvedValue({
-        sound: {
-          playAsync: jest.fn().mockResolvedValue(undefined),
-          stopAsync: jest.fn().mockResolvedValue(undefined),
-          unloadAsync: jest.fn().mockResolvedValue(undefined),
-        },
-      }),
-    },
+jest.mock('expo-audio', () => ({
+  requestRecordingPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted', granted: true }),
+  setAudioModeAsync: jest.fn().mockResolvedValue(undefined),
+  createAudioPlayer: jest.fn().mockReturnValue({
+    play: jest.fn(),
+    pause: jest.fn(),
+    release: jest.fn(),
+  }),
+  AudioRecorder: jest.fn().mockImplementation(() => ({
+    prepareToRecordAsync: jest.fn().mockResolvedValue(undefined),
+    record: jest.fn(),
+    stop: jest.fn().mockResolvedValue(undefined),
+    uri: 'file:///cache/test.wav',
+    isRecording: false,
+  })),
+  RecordingPresets: {
+    HIGH_QUALITY: {},
   },
 }));
 

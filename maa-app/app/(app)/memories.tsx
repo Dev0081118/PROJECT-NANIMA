@@ -4,9 +4,10 @@
  */
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, StyleSheet, SafeAreaView, FlatList,
+  View, Text, StyleSheet, FlatList,
   TouchableOpacity, TextInput, ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { Typography, Spacing, BorderRadius } from '../../constants/Typography';
 import { useMemoryStore, Memory } from '../../stores/memory';

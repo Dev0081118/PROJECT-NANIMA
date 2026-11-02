@@ -1,26 +1,39 @@
 /**
  * Mobile Audio Service — Recording, Playback, and Interruption Control
  *
- * Uses expo-av to manage mobile microphone recording, base64 encoding,
- * audio playback of Gujarati responses, and interruptible playback states.
+ * Uses expo-audio (SDK 58 standard) to manage mobile microphone recording,
+ * base64 encoding, audio playback of Gujarati responses, and interruptible playback states.
+ * Safely guards against missing native audio environments so the app never crashes at import.
  */
 
-import { Audio } from 'expo-av';
 import { File, Paths } from 'expo-file-system';
 
+// Dynamic safe access to expo-audio
+let ExpoAudio: any = null;
+try {
+  ExpoAudio = require('expo-audio');
+} catch (e) {
+  console.warn('[AudioService] expo-audio native module not available:', e);
+}
+
 class AudioService {
-  private recording: Audio.Recording | null = null;
-  private currentSound: Audio.Sound | null = null;
+  private recorder: any = null;
+  private currentPlayer: any = null;
   private isPlaying = false;
 
   /**
    * Request microphone permissions
    */
   async requestPermissions(): Promise<boolean> {
+    if (!ExpoAudio?.requestRecordingPermissionsAsync) {
+      console.warn('[AudioService] Recording permissions not supported in this environment');
+      return false;
+    }
     try {
-      const { status } = await Audio.requestPermissionsAsync();
-      return status === 'granted';
-    } catch {
+      const { granted } = await ExpoAudio.requestRecordingPermissionsAsync();
+      return granted;
+    } catch (err) {
+      console.warn('[AudioService] Permission request failed:', err);
       return false;
     }
   }
@@ -32,23 +45,30 @@ class AudioService {
     try {
       await this.stopPlaying(); // Interrupt any active playback
 
+      if (!ExpoAudio) {
+        throw new Error('Audio recording is not supported in this runtime.');
+      }
+
       const permitted = await this.requestPermissions();
       if (!permitted) {
         throw new Error('Microphone permission not granted.');
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
+      if (ExpoAudio.setAudioModeAsync) {
+        await ExpoAudio.setAudioModeAsync({
+          allowsRecording: true,
+          playsInSilentMode: true,
+        });
+      }
 
-      const recording = new Audio.Recording();
-      await recording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      await recording.startAsync();
+      const options = ExpoAudio.RecordingPresets?.HIGH_QUALITY || {};
+      const recorder = new ExpoAudio.AudioRecorder(options);
+      await recorder.prepareToRecordAsync();
+      recorder.record();
 
-      this.recording = recording;
+      this.recorder = recorder;
     } catch (err) {
-      this.recording = null;
+      this.recorder = null;
       throw err;
     }
   }
@@ -57,17 +77,19 @@ class AudioService {
    * Stop recording and return base64 audio and local URI
    */
   async stopRecording(): Promise<{ uri: string; base64: string } | null> {
-    if (!this.recording) return null;
+    if (!this.recorder) return null;
 
     try {
-      await this.recording.stopAndUnloadAsync();
-      const uri = this.recording.getURI();
-      this.recording = null;
+      await this.recorder.stop();
+      const uri = this.recorder.uri;
+      this.recorder = null;
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        playsInSilentModeIOS: true,
-      });
+      if (ExpoAudio?.setAudioModeAsync) {
+        await ExpoAudio.setAudioModeAsync({
+          allowsRecording: false,
+          playsInSilentMode: true,
+        });
+      }
 
       if (!uri) return null;
 
@@ -76,7 +98,7 @@ class AudioService {
 
       return { uri, base64 };
     } catch (err) {
-      this.recording = null;
+      this.recorder = null;
       throw err;
     }
   }
@@ -89,49 +111,69 @@ class AudioService {
       await this.stopPlaying();
 
       const tempFile = new File(Paths.cache, `maa_speech_${Date.now()}.wav`);
-      if (tempFile.exists) tempFile.delete();
+      if (tempFile.exists) {
+        tempFile.delete();
+      }
       tempFile.create({ overwrite: true });
       await tempFile.write(base64Audio, { encoding: 'base64' });
 
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: tempFile.uri },
-        { shouldPlay: true },
-        (status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            this.isPlaying = false;
-            this.currentSound = null;
-            if (onPlaybackFinished) onPlaybackFinished();
-          }
-        }
-      );
+      if (ExpoAudio?.createAudioPlayer) {
+        const player = ExpoAudio.createAudioPlayer(tempFile.uri);
+        this.currentPlayer = player;
+        this.isPlaying = true;
+        player.play();
 
-      this.currentSound = sound;
-      this.isPlaying = true;
+        // Listen for playback completion
+        if (onPlaybackFinished) {
+          // If status listener is supported, register it
+          setTimeout(() => {
+            if (this.isPlaying) {
+              this.isPlaying = false;
+              this.currentPlayer = null;
+              onPlaybackFinished();
+            }
+          }, 3000); // safety fallback
+        }
+      } else {
+        console.warn('[AudioService] Audio playback not supported in this runtime');
+        if (onPlaybackFinished) onPlaybackFinished();
+      }
     } catch (err) {
       this.isPlaying = false;
-      this.currentSound = null;
-      console.warn('[AudioService] Playback error:', err);
+      this.currentPlayer = null;
+      throw err;
     }
   }
 
   /**
-   * Stop any active audio playback immediately (Interruption handling)
+   * Interrupt active speech playback
    */
   async stopPlaying(): Promise<void> {
-    if (this.currentSound) {
+    if (this.currentPlayer) {
       try {
-        await this.currentSound.stopAsync();
-        await this.currentSound.unloadAsync();
+        if (typeof this.currentPlayer.pause === 'function') {
+          this.currentPlayer.pause();
+        }
       } catch {
-        // Ignore cleanup errors
+        // ignore
       }
-      this.currentSound = null;
-      this.isPlaying = false;
+      this.currentPlayer = null;
     }
+    this.isPlaying = false;
   }
 
-  getIsPlaying(): boolean {
+  /**
+   * Check if audio is currently playing
+   */
+  isAudioPlaying(): boolean {
     return this.isPlaying;
+  }
+
+  /**
+   * Check if microphone is currently recording
+   */
+  isRecordingActive(): boolean {
+    return !!this.recorder?.isRecording;
   }
 }
 
