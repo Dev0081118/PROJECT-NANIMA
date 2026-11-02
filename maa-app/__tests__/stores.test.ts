@@ -39,6 +39,14 @@ describe('useConversationStore', () => {
     useConversationStore.getState().setError('Mic permission required');
     expect(useConversationStore.getState().error).toBe('Mic permission required');
   });
+
+  it('handles interruption of speaking playback', async () => {
+    useConversationStore.getState().setStatus('speaking');
+    expect(useConversationStore.getState().status).toBe('speaking');
+
+    await useConversationStore.getState().interruptSpeaking();
+    expect(useConversationStore.getState().status).toBe('ready');
+  });
 });
 
 describe('useMemoryStore', () => {

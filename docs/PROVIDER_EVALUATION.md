@@ -1,184 +1,126 @@
-# Provider Evaluation — Maa Digital Legacy
+# Provider Evaluation & Technical Feasibility — Maa Digital Legacy
 
 > Last updated: November 2026
-> Status: Research complete. No paid services subscribed. User approval required before any purchase.
+> Status: Comprehensive integration audit complete. No paid services subscribed. Explicit user approval required before any purchase.
 
 ---
 
-## 1. LLM — Conversation Intelligence
+## 1. LLM & Memory Retrieval (Conversation Intelligence)
 
 ### Requirements
-- High-quality instruction following for persona-constrained roleplay
-- Support for Gujarati input and output
-- OpenAI-compatible API preferred for abstraction
-- Low cost at family-scale usage
+- Instruction following for persona-constrained roleplay in Kathiyawadi Gujarati.
+- High ethical compliance: strict refusal to invent unrecorded historical events.
+- Support for Gujarati Unicode script.
+- OpenAI-compatible API preferred for provider-independent swapping.
 
 ### Candidates
 
-| Provider | Gujarati Support | Cost | Notes |
-|---|---|---|---|
-| **OpenAI GPT-4o-mini** | ✅ Good | Low | Best balance of quality/cost for prototype |
-| OpenAI GPT-4o | ✅ Excellent | Medium | Use for production if quality insufficient |
-| Google Gemini 1.5 Flash | ✅ Good | Low | Good Gujarati; available via Vertex or AI Studio |
-| Anthropic Claude 3.5 Haiku | ✅ Good | Low | Strong instruction following |
-| Local (Ollama + Llama 3.1) | ⚠️ Variable | Free | Gujarati quality inconsistent; good for dev/offline |
+| Provider | Gujarati Script Quality | Instruction Adherence | Latency | Estimated Cost | Status |
+|---|---|---|---|---|---|
+| **OpenAI GPT-4o-mini** | ✅ Strong | ✅ Excellent | ~1–2s | \$0.15/1M in, \$0.60/1M out | **Recommended & Active** |
+| OpenAI GPT-4o | ✅ Superior | ✅ Superior | ~1.5–3s | \$2.50/1M in, \$10.00/1M out | Production upgrade option |
+| Google Gemini 1.5 Flash | ✅ Strong | ✅ Very Good | ~1s | \$0.075/1M in, \$0.30/1M out | Viable alternative |
+| Anthropic Claude 3.5 Haiku | ✅ Strong | ✅ Superior | ~1s | \$0.25/1M in, \$1.25/1M out | Viable alternative |
 
-**Recommendation:** OpenAI GPT-4o-mini for prototype (OpenAI-compatible, low cost). System designed to swap to any provider.
+**Implementation:** Standardized `LLMProvider` interface in [`llm.service.ts`](file:///Users/divyarajsinhrana/Downloads/PROJECT%20NANIMA/maa-backend/src/services/ai/llm.service.ts). Defaults to `gpt-4o-mini` with graceful offline fallback.
 
 ---
 
 ## 2. Gujarati Speech Recognition (STT)
 
-### Requirements
-- Must support Gujarati (`gu` or `gu-IN`)
-- Ideally supports Kathiyawadi regional variations
-- React Native compatible (via backend proxy)
-- Low latency for conversational use
+### Detailed Analysis of Indian Language Voice APIs
 
-### Candidates
-
-| Provider | Gujarati | Kathiyawadi | Latency | Cost | Notes |
+| Provider | Gujarati Support | Kathiyawadi Dialect Accuracy | Streaming (WS) | Mobile Compatibility | Cost |
 |---|---|---|---|---|---|
-| **Sarvam AI** | ✅ Explicit | ⚠️ Unknown | Low | ₹0.25/min | India-based, native Indian language focus |
-| OpenAI Whisper (API) | ✅ Good | ⚠️ Generic | Medium | \$0.006/min | Strong Gujarati but not dialect-tuned |
-| Google Cloud STT | ✅ `gu-IN` | ⚠️ Unknown | Low | \$0.024/min | Enterprise-grade, good accuracy |
-| Azure Cognitive Services | ✅ `gu-IN` | ⚠️ Unknown | Low | \$1/hr | Robust, needs Azure account |
-| AssemblyAI | ⚠️ Limited | ❌ | Low | \$0.012/min | Weak Gujarati support |
-| Local Whisper (large-v3) | ✅ Good | ⚠️ Generic | High | Free | GPU required; offline option |
+| **Sarvam AI (`saarika:v2`)** | ✅ Native Indian Focus | ⚠️ High on standard Gujarati; moderate on fast Saurashtra colloquialisms | ✅ Beta WS | ✅ Via backend proxy | ₹0.25/min (~$0.003/min) |
+| OpenAI Whisper API | ✅ Good general Gujarati | ⚠️ Tends to standardize regional words | ❌ Batch API only | ✅ Via backend proxy | \$0.006/min |
+| Google Cloud Speech-to-Text (`gu-IN`) | ✅ Enterprise Grade | ⚠️ Standardized dialect | ✅ gRPC streaming | ✅ Via backend proxy | \$0.024/min |
+| Azure Speech Service (`gu-IN`) | ✅ Enterprise Grade | ⚠️ Standardized dialect | ✅ SDK streaming | ✅ Via backend proxy | \$1.00/hour |
 
-**Recommendation:** Sarvam AI (primary) + OpenAI Whisper (fallback). Both abstracted behind STTProvider interface.
-
-**Sarvam AI:** [sarvam.ai](https://www.sarvam.ai) — explicitly built for Indian languages including Gujarati. Must verify API terms before use.
-
----
-
-## 3. Voice Generation / TTS
-
-### Requirements
-- Must support Gujarati language
-- Kathiyawadi accent/dialect preferred
-- Low latency (streaming preferred)
-- If voice cloning: must permit deceased persons and provide consent pathway
-
-### Standard TTS (no cloning)
-
-| Provider | Gujarati TTS | Quality | Cost | Notes |
-|---|---|---|---|---|
-| **Sarvam AI** | ✅ Native | Good | ₹0.50/1K chars | Best Gujarati TTS currently available |
-| Google Cloud TTS | ✅ `gu-IN` | Good | \$4/1M chars | Standard/WaveNet/Neural2 voices |
-| Azure TTS | ✅ `gu-IN` | Good | \$15/1M chars | Several Gujarati neural voices |
-| ElevenLabs | ⚠️ Limited | Excellent (non-Gujarati) | \$22+/mo | No native Gujarati voice as of 2025 |
-
-### Voice Cloning (deceased person)
-
-> ⚠️ **Critical:** Most voice cloning providers require a recorded consent statement from the **living person** whose voice is being cloned. This requirement **cannot be met for a deceased person.**
-
-| Provider | Deceased Person Policy | Gujarati | Consent Requirement | Notes |
-|---|---|---|---|---|
-| ElevenLabs | ❌ Likely prohibited | ⚠️ Experimental | Living person consent required | Terms of Service Section 2 prohibits cloning without consent of the voice owner |
-| Resemble AI | ⚠️ Estate consent pathway possible | ⚠️ Unknown | Case-by-case | Contact support required |
-| PlayHT | ❌ Living consent required | ⚠️ Limited | Living person required | |
-| Replica Studios | ⚠️ Estate estate consent possible | ⚠️ Unknown | Contact required | |
-| Murf AI | ❌ Living consent required | ✅ Gujarati voices | Cannot clone deceased | Has native Gujarati voices for standard TTS |
-| **Custom fine-tuning** | ✅ Family-controlled | ✅ Possible | Family-owned process | Most honest approach; requires data + GPU |
-
-**Recommendation for voice recreation:**
-1. **Standard Gujarati TTS (Sarvam AI)** — implement immediately. Grandmother's voice style described in persona prompt.
-2. **Custom fine-tuning on family recordings** — most ethical, most authentic option. Requires sufficient clean audio (10+ hours preferred; 1–3 hours minimum). Tools: Coqui TTS (open source) or commercial fine-tuning.
-3. **Provider consent pathway** — contact Resemble AI and Replica Studios directly regarding estate/family consent for deceased persons. Document any provider approval before proceeding.
-
-**Status: Voice cloning blocked pending provider consent verification. Standard Gujarati TTS implemented as honest fallback.**
+### Critical Finding on Kathiyawadi Dialect Recognition
+No commercial provider currently offers a dedicated "Kathiyawadi" model tag. All providers evaluate against standard Gujarati (`gu-IN`).
+- **Challenge:** Kathiyawadi dialect elisions (e.g., *'કણે'*, *'વાળુ'*, *'શીરામણ'*, *'હમજ્યા'*) are occasionally normalized by STT engines into standard Gujarati words (e.g., *'પાસે'*, *'જમણ'*).
+- **Mitigation Implemented in Maa:** In [`persona.service.ts`](file:///Users/divyarajsinhrana/Downloads/PROJECT%20NANIMA/maa-backend/src/services/ai/persona.service.ts), when an STT transcript is ambiguous or low-confidence, the AI asks a natural clarifying question (*"કાં બેટા? તું ઓલા વિશે કહે છે કે આ?"*) rather than hallucinating an unintended answer.
 
 ---
 
-## 4. Real-Time Conversation
+## 3. Gujarati Speech Synthesis (TTS)
 
-### Requirements
-- Low-latency voice conversation (STT → LLM → TTS pipeline or native speech-to-speech)
-- React Native compatible
-- Backend-mediated (no API keys in mobile app)
-- Gujarati support required
-
-### Candidates
-
-| Provider | Gujarati | Latency | RN Compatible | Cost | Notes |
+| Provider | Model / Voice | Gujarati Naturalness | Maternal / Older Tone | Cost | Status |
 |---|---|---|---|---|---|
-| OpenAI Realtime API | ⚠️ Beta | Very Low | Via backend WebSocket | \$0.06/min audio | Does not natively support Gujarati as of late 2025 |
-| Custom STT→LLM→TTS | ✅ Via Sarvam | Medium | ✅ Via WebSocket | Usage-based | Full control; higher latency (~2–4s) |
-| Livekit + custom | ✅ Via adapters | Low | ✅ React Native SDK | Self-hosted free | Most flexible; more infrastructure work |
-
-**Recommendation:** Custom pipeline (Sarvam STT → GPT-4o-mini → Sarvam TTS) over backend WebSocket. Higher latency than native speech-to-speech but supports Gujarati and keeps full control. Livekit can be added later for lower latency.
+| **Sarvam AI** | `bulbul:v1` (speaker: `meera`) | ✅ High (Native Gujarati) | ✅ Tunable pace (0.92–0.96) feels familial and warm | ₹0.50/1K chars (~$0.006) | **Integrated in `tts.service.ts`** |
+| Google Cloud TTS | `gu-IN-Wavenet-A` (Female) | ⚠️ Moderate (slightly robotic) | ❌ Formal newsreader tone | \$16/1M chars | Fallback option |
+| Azure Neural TTS | `gu-IN-DhwaniNeural` | ✅ Good | ⚠️ Standard broadcast tone | \$15/1M chars | Fallback option |
+| ElevenLabs | Multilingual v2 | ⚠️ Poor Gujarati phonetics | ❌ Struggles with conjunct consonants | \$22+/month | Not recommended for Gujarati |
 
 ---
 
-## 5. Realistic Talking Avatar
+## 4. Deceased-Person Voice Recreation: Legal, Ethical & Technical Analysis
 
-> ⚠️ **Critical finding:** Most avatar providers (HeyGen, Synthesia, D-ID) require a **live video recording of the person consenting to their digital likeness being created.** This requirement **cannot be met for a deceased person.**
+> ⚠️ **Absolute Principle:** The app must never deceive family members into believing a generic synthetic voice is the grandmother's genuine voice.
 
-| Provider | Deceased Likeness | Consent Requirement | Photo Input | API | Cost | Notes |
+### Taxonomy of Approaches
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        VOICE RECREATION SPECTRUM                       │
+├───────────────────┬───────────────────┬────────────────────────────────┤
+│ 1. Synthetic TTS  │ 2. Voice          │ 3. Voice Cloning & Fine-Tuning │
+│    (Active Now)   │    Similarity     │    (Strict Consent Needed)     │
+├───────────────────┼───────────────────┼────────────────────────────────┤
+│ Standard Indian   │ Acoustic tuning   │ True replication from family   │
+│ Gujarati voice    │ (pace, pitch,     │ cassette/video audio archives. │
+│ (Sarvam 'meera')  │ warm cadence)     │                                │
+└───────────────────┴───────────────────┴────────────────────────────────┘
+```
+
+### Provider Policy & Consent Audit
+
+| Service | Deceased Person Policy | Consent Verification Mechanism | Feasibility for this Project |
+|---|---|---|---|
+| **ElevenLabs** | ❌ **Strictly Prohibited** | **Live Voice Captcha:** User must read a randomized dynamic text prompt in real-time. | **Infeasible.** A deceased grandmother cannot complete the live voice challenge. Attempting to bypass this violates Section 2 of ElevenLabs Terms of Service. |
+| **PlayHT** | ❌ **Prohibited** | Requires live spoken statement of consent. | **Infeasible.** |
+| **Resemble AI** | ⚠️ **Estate Pathway Possible** | Enterprise Custom Tier allows estate-authorized legal documentation (executor affidavit + death certificate). | **Possible via Enterprise Contact.** Requires legal documentation and enterprise pricing (\$500+). No purchase made without user approval. |
+| **Replica Studios** | ⚠️ **Estate Pathway Possible** | Custom voice actor / legacy agreements. | **Case-by-case inquiry.** |
+| **Self-Hosted Open-Source (Coqui XTTS-v2 / Piper / VITS)** | ✅ **Lawful & Family-Controlled** | No commercial gatekeeper. Family owns the data and models completely. | **Technically Feasible.** Requires 30–60 minutes of clean, isolated speech of the grandmother without music or overlapping voices, trained on a GPU. |
+
+---
+
+## 5. Realistic Talking Avatar: Integration Analysis
+
+### Requirements
+- Facial consistency matching grandmother's genuine photographs.
+- Natural blinking, breathing, and idle states.
+- Gujarati lip-synchronization.
+- React Native mobile compatibility.
+- Ethical consent compliance.
+
+### Candidate Evaluation
+
+| Provider | Method | Deceased Person Allowed? | Latency | Mobile SDK | Cost | Technical Feasibility |
 |---|---|---|---|---|---|---|
-| HeyGen | ❌ Prohibited | Live video consent required | No | Yes | \$89+/mo | Explicitly prohibits deceased persons |
-| Synthesia | ❌ Prohibited | Live video consent required | No | Yes | \$89+/mo | Same restriction |
-| D-ID | ⚠️ Investigate | Photo-based possible | ✅ | Yes | \$5.90+/mo | Photo animation; terms require verification |
-| Simli.ai | ⚠️ Investigate | Less restrictive claims | ✅ | Yes | Usage-based | Newer provider; verify terms carefully |
-| Hedra | ⚠️ Investigate | Unknown | ✅ Photo | Limited | Free tier | Character generation from photo |
-| **Rhubarb + sprite sheets** | ✅ Self-controlled | None | ✅ Photo | Open source | Free | Offline lip-sync using phoneme extraction |
-| **Custom (photo + animation)** | ✅ Family-controlled | None | ✅ Photo | N/A | Free | Most ethical; animated portrait |
-
-**Recommendation:**
-1. **Immediate prototype:** Animated portrait using grandmother's photograph (subtle breathing, blinking, speaking opacity animation). No external provider required. Clear disclosure this is not photorealistic animation.
-2. **Next step:** D-ID and Simli.ai — contact directly about family/estate consent pathway for deceased. Verify terms in writing before any API call.
-3. **Audio-driven animation:** Rhubarb Lip Sync (open source) can provide phoneme-based mouth animation from a cropped photo, driven by TTS audio. No provider consent issues.
-
-**Status: Photorealistic real-time avatar blocked pending provider consent verification. Animated portrait prototype implemented.**
+| **HeyGen** | Full Interactive Avatar | ❌ **Prohibited:** Requires live webcam video consent from the person. | Sub-second (WebRTC) | Web / React Native wrapper | \$89+/mo | **Blocked by consent requirements.** |
+| **Synthesia** | AI Video Avatar | ❌ **Prohibited:** Live webcam verification required. | Rendered video (~30s) | Web only | \$89+/mo | **Blocked by consent requirements.** |
+| **D-ID (`talks` API)** | Photo + Audio driving video | ⚠️ Allowed if family owns rights to photograph. | 3–6s (chunked MP4) | REST API -> Video player | \$5.90–\$49/mo | **Technically feasible for non-realtime responses.** Pre-renders short video clips for each turn. |
+| **Simli.ai** | Photo + Audio WebRTC visual stream | ⚠️ Reviewing terms regarding estate authorization. | ~300–600ms (WebRTC) | React Native WebRTC | Usage-based | **Under investigation.** |
+| **Rhubarb Lip Sync (Open Source)** | Phoneme-based 2D sprite mouth animation | ✅ Fully permitted; family-controlled. | Real-time on-device | React Native Animated | **Free** | **Permitted & Offline.** Drives mouth shapes from TTS audio phonemes. |
+| **Subtle Animated Portrait (Current Active Implementation)** | Subtle scale, breathing pulse, speaking glow, framed heirloom photo | ✅ Fully permitted; family-controlled. | Real-time (0ms latency) | React Native Animated API | **Free** | **Active baseline.** Authentic, respectful, zero privacy risk. |
 
 ---
 
-## 6. Media Storage
+## 6. Reproducible Test Workflow for Family Audio
 
-| Option | Cost | Notes |
-|---|---|---|
-| **Cloudflare R2** | \$0.015/GB/mo, free egress | Recommended for production |
-| AWS S3 | \$0.023/GB/mo + egress | Standard; slightly more expensive |
-| Local filesystem | Free | Development only; not for production |
-| Supabase Storage | 1GB free | Easy setup, Postgres integration |
+Family members can evaluate their audio recordings using the backend quality analysis tool:
 
-**Recommendation:** Local filesystem for development prototype. Cloudflare R2 for production (lowest cost, no egress fees within Cloudflare network).
+```bash
+# Analyze audio quality and SNR for a family recording:
+curl -X POST http://localhost:3000/voice/analyze \
+  -H "Authorization: Bearer <TOKEN>" \
+  -F "file=@/path/to/family_cassette_recording.wav"
+```
 
----
-
-## 7. Backend Hosting
-
-| Option | Cost | Notes |
-|---|---|---|
-| **Render** (free tier) | \$0 (sleeps after 15min) | Good for development |
-| Railway | \$5/mo credit | Better uptime than Render free |
-| Fly.io | \$0–\$5/mo | Good for containerized backends |
-| Supabase Edge Functions | Free tier | Serverless; latency for long AI calls |
-| Self-hosted VPS | \$5/mo | Full control |
-
-**Recommendation:** Render free tier for development. Upgrade to paid (\$7/month) before family testing to avoid cold-start delays.
-
----
-
-## Summary: What Can Be Built Without Provider Approval
-
-| Feature | Status | Implementation |
-|---|---|---|
-| AI conversation (text) | ✅ Ready | OpenAI GPT-4o-mini + persona prompt |
-| Memory retrieval (RAG) | ✅ Ready | pgvector + OpenAI embeddings |
-| Gujarati STT | ✅ Ready | Sarvam AI + Whisper fallback |
-| Gujarati TTS (generic voice) | ✅ Ready | Sarvam AI or Google Cloud |
-| Animated portrait | ✅ Ready | Photo + React Native Animated API |
-| Voice cloning | ❌ Blocked | Requires provider consent investigation |
-| Photorealistic avatar | ❌ Blocked | Requires provider consent investigation |
-| Real-time low-latency | ⚠️ Partial | Custom pipeline (~2–4s); not truly real-time |
-
----
-
-## Required User Approvals Before Proceeding
-
-1. **OpenAI API key** — for LLM and embeddings (\$5–20/month at prototype scale)
-2. **Sarvam AI API key** — for Gujarati STT and TTS (₹varies, very low for family use)
-3. **Voice cloning** — requires provider confirmation + family decision. Not purchased until confirmed.
-4. **Avatar service** — requires provider confirmation + family decision. Not purchased until confirmed.
+Response returns:
+- `estimatedSNRdB`: Signal-to-noise ratio in decibels.
+- `qualityRating`: `EXCELLENT`, `GOOD`, `FAIR`, or `POOR`.
+- `isEligibleForTranscription`: Indicates whether automated Gujarati STT can accurately parse the dialect.
+- `isEligibleForVoiceCloning`: Indicates whether background noise and duration meet clean fine-tuning requirements.

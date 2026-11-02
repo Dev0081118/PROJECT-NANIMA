@@ -21,6 +21,9 @@ interface Memory {
   verification_status: string;
   family_approved: boolean;
   confidence_score: number | null;
+  source_description?: string;
+  source_timestamp?: number;
+  transcript_excerpt?: string;
 }
 
 interface RAGResult {
@@ -42,7 +45,8 @@ export async function retrieveRelevantMemories(
   const embeddingStr = `[${embedding.join(',')}]`;
 
   const memories = await query<Memory>(
-    `SELECT id, category, title, content, verification_status, family_approved, confidence_score
+    `SELECT id, category, title, content, verification_status, family_approved, confidence_score,
+            source_description, source_timestamp, transcript_excerpt
      FROM memories
      WHERE user_id = $1
        AND family_approved = TRUE

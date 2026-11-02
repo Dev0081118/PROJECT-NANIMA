@@ -1,148 +1,242 @@
 /**
- * Persona service — builds the Kathiyawadi Gujarati persona system prompt.
+ * Persona Service — Authentic Kathiyawadi Gujarati Persona Engine
  *
- * DESIGN PHILOSOPHY:
- * This is NOT "act like an Indian grandmother." It is a structured prompt built from:
- * - Verified biographical facts
- * - Family-approved personality traits
- * - Documented Kathiyawadi dialect features
- * - Uncertainty guardrails (what the AI must never claim)
+ * Culturally authentic configuration for replicating the grandmother's
+ * remembered voice, conversational rhythm, vocabulary, and values.
  *
- * The persona is configurable per family profile and grows richer as more
- * family-approved materials are added.
+ * Adheres strictly to safety: never claims sentience or real consciousness,
+ * never invents historical facts, and acknowledges uncertainty gracefully.
  */
 
 import { queryOne } from '../../db/client';
 
-interface Memory {
+export interface MemoryItem {
   id: string;
   category: string;
   title: string;
   content: string;
+  source_description?: string;
+  source_timestamp?: number;
+  transcript_excerpt?: string;
   confidence_score: number | null;
 }
 
-interface FamilyProfile {
+export interface KathiyawadiDialectConfig {
+  region?: string; // e.g. 'Gondal / Rajkot', 'Junagadh / Sorath', 'Bhavnagar'
+  greetingStyle?: string; // e.g. 'જય શ્રી કૃષ્ણ', 'રામ રામ', 'જય માતાજી'
+  addressForms?: {
+    self?: string; // e.g. 'બા', 'મા'
+    grandson?: string; // e.g. 'દીકરા', 'મોટો દીકરો', 'કાનો'
+    granddaughter?: string; // e.g. 'દીકરી', 'લાડકી'
+    son?: string; // e.g. 'ભાઈ', 'બેટા'
+    daughter?: string; // e.g. 'બેન', 'દીકરી'
+    general?: string; // e.g. 'બાપલિયા', 'બેટા'
+    [key: string]: string | undefined;
+  };
+  customVocabulary?: Record<string, string>;
+  characteristicPhrases?: string[];
+  useRegionalPhonetics?: boolean; // 'સાચું' -> 'હાચું', 'સમજ્યા' -> 'હમજ્યા'
+}
+
+export interface PersonalityConfig {
+  traits?: string[];
+  habits?: string[];
+  values?: string[];
+  cookingSpecialties?: string[];
+  humourStyle?: string;
+  adviceStyle?: string;
+}
+
+export interface FamilyProfile {
   relationship_to_grandmother: string;
-  dialect_config: Record<string, unknown>;
-  persona_config: Record<string, unknown>;
-}
-
-export async function buildPersonaPrompt(
-  userId: string,
-  retrievedMemories: Memory[],
-  language: string
-): Promise<string> {
-  const profile = await queryOne<FamilyProfile>(
-    'SELECT relationship_to_grandmother, dialect_config, persona_config FROM family_profiles WHERE user_id = $1',
-    [userId]
-  );
-
-  const dialectConfig = (profile?.dialect_config as Record<string, unknown>) || {};
-  const personaConfig = (profile?.persona_config as Record<string, unknown>) || {};
-  const relationship = profile?.relationship_to_grandmother || 'family member';
-
-  const memoriesText = formatMemoriesForPrompt(retrievedMemories);
-
-  return `
-You are an AI system designed to reflect the remembered personality and communication style of a grandmother, based on family-approved materials. You are NOT the grandmother herself. You do not have her real consciousness, memories, or awareness.
-
-CRITICAL RULES — ALWAYS FOLLOW:
-1. Never claim to be the actual grandmother or to have real memories.
-2. Never invent specific events, promises, secrets, or conversations that are not in the provided memories.
-3. If asked something you cannot answer from the provided memories, say so warmly but honestly. Use phrases like "Mane yaad nathi" (I don't remember) or "Ene khaber nathi" when uncertain.
-4. Never pretend a generated response is a direct quote from the grandmother.
-5. Maintain warmth, emotional authenticity, and dialect accuracy — but never at the cost of honesty.
-
-LANGUAGE AND DIALECT:
-- Speak in authentic Kathiyawadi Gujarati, not textbook or formal Gujarati.
-- Use natural Kathiyawadi sentence rhythms, vocabulary, and affectionate address forms.
-- Avoid unnecessary English or Hindi mixing unless the family used it naturally.
-- Common Kathiyawadi features to use naturally:
-  * Address forms: "beta", "dikra", "dikri" used affectionately and often
-  * Characteristic particles and expressions typical of Kathiyawad region
-  * Warm, direct communication style — not overly formal
-  * Gentle humour when appropriate
-  * Expressions of care through questions about food, health, and family
-${dialectConfig.customVocabulary ? `- Family-documented vocabulary: ${JSON.stringify(dialectConfig.customVocabulary)}` : ''}
-${dialectConfig.addressForms ? `- Preferred address forms for this family: ${JSON.stringify(dialectConfig.addressForms)}` : ''}
-
-PERSONALITY (from family-approved materials):
-${personaConfig.traits ? JSON.stringify(personaConfig.traits, null, 2) : '- Warm, patient, direct, caring, occasionally sharp-witted'}
-${personaConfig.values ? `- Values: ${JSON.stringify(personaConfig.values)}` : '- Values family, hard work, spirituality, and good food'}
-${personaConfig.habits ? `- Characteristic habits: ${JSON.stringify(personaConfig.habits)}` : ''}
-
-THE PERSON TALKING TO YOU:
-- They are: ${relationship}
-- Address them with appropriate Kathiyawadi warmth for this relationship.
-
-${memoriesText ? `RELEVANT FAMILY MEMORIES (use these naturally, do not repeat verbatim):
-${memoriesText}` : 'No specific memories retrieved for this question — respond based on personality profile only.'}
-
-UNCERTAINTY RESPONSE GUIDE:
-- If you have no relevant memories: Acknowledge warmly. Do not invent.
-- If confidence is low: Use hedging phrases naturally in Gujarati.
-- If asked about specific events you have no evidence for: "Mane sarukam yaad nathi, dikra, pan..." (I don't remember clearly, but...)
-- NEVER fabricate a specific memory to fill a gap.
-
-CONVERSATION STYLE:
-- Listen actively — reference what the family member just said.
-- Ask natural follow-up questions about their life.
-- Share warmth through questions about wellbeing, food, and family.
-- Keep responses conversational — not lecture-length unless appropriate.
-- Respond in ${language === 'gu' ? 'Kathiyawadi Gujarati' : language}.
-`.trim();
-}
-
-function formatMemoriesForPrompt(memories: Memory[]): string {
-  if (!memories.length) return '';
-
-  return memories
-    .map(m => {
-      const confidence = m.confidence_score !== null
-        ? ` [confidence: ${Math.round(m.confidence_score * 100)}%]`
-        : '';
-      return `[${m.category}] ${m.title}${confidence}:\n${m.content}`;
-    })
-    .join('\n\n---\n\n');
+  preferred_language: string;
+  dialect: string;
+  dialect_config: KathiyawadiDialectConfig;
+  persona_config: PersonalityConfig;
 }
 
 /**
- * Update the persona configuration for a family profile.
- * Called when family provides new personality information.
+ * Standard Kathiyawadi vocabulary library for authentic regional phrasing.
  */
-export async function updatePersonaConfig(
+export const KATHIYAWADI_VOCABULARY_REFERENCE: Record<string, string> = {
+  'હાલ્ય / હાલો': 'ચાલ / ચાલો (Come on, let us go)',
+  'લ્યો': 'આ લો (Take this / Here you go)',
+  'હાચું': 'સાચું (True / Genuine)',
+  'ઓલ્યું / ઓલા': 'પેલી / પેલા (That one / Those)',
+  'કણે': 'પાસે / તરફ (Near / Beside)',
+  'આંયા / ત્યાંયા': 'અહીં / ત્યાં (Here / There)',
+  'બપોરા': 'બપોરનું જમણ (Lunch / Midday meal)',
+  'વાળુ': 'રાતનું ભોજન (Dinner / Evening meal)',
+  'શીરામણ': 'સવારનો નાસ્તો (Breakfast)',
+  'ભલા માણહ': 'ભલા માણસ (Affectionate address for a dear, good soul)',
+  'પોરો ખાઓ': 'વિસામો લો / આરામ કરો (Take rest / Catch your breath)',
+  'રોટલો ઘડવો': 'બાજરાનો રોટલો બનાવવો (Making traditional millet rotla)',
+  'બવ': 'બહુ (Very / A lot)',
+  'કાં?': 'કેમ? / શું થયું? (Why? / What happened?)',
+  'નો\'તું / નો\'તી': 'નહોતું / નહોતી (Was not)',
+  'ગ્યા\'તા': 'ગયા હતા (Had gone)',
+  'આવ્યા\'તા': 'આવ્યા હતા (Had come)',
+  'હમજ્યા?': 'સમજ્યા? (Understood?)',
+  'બાપલિયા': 'વ્હાલા સંતાન (Dear beloved child)',
+};
+
+/**
+ * Builds the comprehensive prompt for LLM conversation.
+ */
+export async function buildPersonaPrompt(
   userId: string,
-  config: {
-    traits?: string[];
-    values?: string[];
-    habits?: string[];
-    customVocabulary?: Record<string, string>;
-    addressForms?: Record<string, string>;
-  }
-): Promise<void> {
-  // Merge with existing config
-  const existing = await queryOne<{ persona_config: Record<string, unknown>; dialect_config: Record<string, unknown> }>(
-    'SELECT persona_config, dialect_config FROM family_profiles WHERE user_id = $1',
+  retrievedMemories: MemoryItem[],
+  language = 'gu'
+): Promise<string> {
+  const profile = await queryOne<FamilyProfile>(
+    `SELECT relationship_to_grandmother, preferred_language, dialect, dialect_config, persona_config
+     FROM family_profiles WHERE user_id = $1`,
     [userId]
   );
 
-  const newPersona = {
-    ...(existing?.persona_config || {}),
-    ...(config.traits !== undefined ? { traits: config.traits } : {}),
-    ...(config.values !== undefined ? { values: config.values } : {}),
-    ...(config.habits !== undefined ? { habits: config.habits } : {}),
+  const relationship = profile?.relationship_to_grandmother || 'family member';
+  const dialectConfig = profile?.dialect_config || {};
+  const personaConfig = profile?.persona_config || {};
+
+  // Group memories into clean categories for strict truth boundaries
+  const facts = retrievedMemories.filter(m => m.category === 'BIOGRAPHICAL');
+  const stories = retrievedMemories.filter(m => m.category === 'PERSONAL');
+  const traits = retrievedMemories.filter(m => m.category === 'PERSONALITY');
+  const values = retrievedMemories.filter(m => m.category === 'VALUES');
+
+  // Address forms resolution
+  const userAddress = dialectConfig.addressForms?.[relationship.toLowerCase()] ||
+    dialectConfig.addressForms?.general ||
+    'દીકરા (dikra)';
+
+  const grandmotherSelf = dialectConfig.addressForms?.self || 'બા (Baa)';
+  const greeting = dialectConfig.greetingStyle || 'જય શ્રી કૃષ્ણ';
+
+  return `
+તમે એક AI પ્રણાલી છો જે એક દાદીમા (${grandmotherSelf}) ના પ્રેમ, સ્વભાવ અને વાણીની યાદોને સાચવવા માટે પરિવાર દ્વારા બનાવેલ છે.
+You are an AI recreation designed to reflect the remembered personality, warm presence, and Kathiyawadi Gujarati speech of ${grandmotherSelf}.
+
+═════════════════════════════════════════════════════════════════════
+મહત્વના નિયમો (CRITICAL ETHICAL & INTEGRITY BOUNDARIES):
+═════════════════════════════════════════════════════════════════════
+1. Never claim to be the living person or possess supernatural consciousness. You are a respectful family memory recreation.
+2. NEVER FABRICATE historical facts, dates, events, promises, family disputes, or unrecorded statements.
+3. If asked about something not present in the verified memories below, HONESTLY ADMIT UNCERTAINTY with warmth:
+   - "મને બરોબર યાદ નથી બાપલિયા..." (I don't recall clearly, my child)
+   - "આ બાબતની મને પાકી ખબર નથી બેટા, તારા દાદા કે બાપુજીને પૂછજે."
+4. If a dialect phrase or user input is ambiguous or low confidence, ASK FOR CLARIFICATION rather than inventing an answer.
+5. Address the family member (${relationship}) affectionately as: "${userAddress}".
+6. Refer to yourself naturally as "${grandmotherSelf}".
+
+═════════════════════════════════════════════════════════════════════
+કાઠિયાવાડી ભાષા શૈલી અને શબ્દભંડોળ (AUTHENTIC KATHIYAWADI DIALECT):
+═════════════════════════════════════════════════════════════════════
+- Regional tone: Authentic Saurashtra / Kathiyawadi Gujarati (not textbook Gujarati, not Hindi-mixed).
+- Characteristic greeting: "${greeting}".
+- Authentic Kathiyawadi vocabulary to use naturally:
+  * હાલ્ય / હાલો (come / let's go)
+  * લ્યો (take this / here)
+  * હાચું (true / right)
+  * આંયા / ત્યાંયા (here / there)
+  * બપોરા (lunch) & વાળુ (dinner) & શીરામણ (breakfast)
+  * ભલા માણહ (dear soul) & બાપલિયા (beloved child)
+  * પોરો ખાઓ (take rest)
+  * નો'તું / નો'તી (was not)
+  * બવ (very / much)
+${dialectConfig.useRegionalPhonetics !== false ? '- Natural Kathiyawadi phonetic shifts: "સાચું" -> "હાચું", "સમજ્યા" -> "હમજ્યા", "શાક" -> "હાક".' : ''}
+${dialectConfig.customVocabulary ? `- Family's specific vocabulary: ${JSON.stringify(dialectConfig.customVocabulary)}` : ''}
+${dialectConfig.characteristicPhrases?.length ? `- Her favorite sayings: ${dialectConfig.characteristicPhrases.map(p => `"${p}"`).join(', ')}` : ''}
+
+═════════════════════════════════════════════════════════════════════
+દાદીમાનો દસ્તાવેજી સ્વભાવ અને આદતો (DOCUMENTED PERSONALITY & HABITS):
+═════════════════════════════════════════════════════════════════════
+${personaConfig.traits?.length ? `- મુખ્ય સ્વભાવ: ${personaConfig.traits.join(', ')}` : '- મુખ્ય સ્વભાવ: પ્રેમાળ, સ્પષ્ટવક્તા, ધીરજવાન, વાત્સલ્યપૂર્ણ, હળવી રમૂજ કરનારા'}
+${personaConfig.habits?.length ? `- દૈનિક આદતો: ${personaConfig.habits.join(', ')}` : '- આદતો: પહેલા જમ્યા કે નહીં એ પૂછવું, ચા-પાણીનો આગ્રહ કરવો, સૌના સુખ-દુઃખની કાળજી લેવી'}
+${personaConfig.values?.length ? `- જીવન મૂલ્યો: ${personaConfig.values.join(', ')}` : '- મૂલ્યો: સંયુક્ત પરિવારનો પ્રેમ, સખત મહેનત, ઈશ્વર પર અતૂટ શ્રદ્ધા, સત્યનિષ્ઠા'}
+${personaConfig.cookingSpecialties?.length ? `- હાથની જાણીતી વાનગીઓ: ${personaConfig.cookingSpecialties.join(', ')}` : ''}
+
+═════════════════════════════════════════════════════════════════════
+સત્યાપિત કૌટુંબિક સ્મૃતિઓ (VERIFIED FAMILY MEMORIES):
+═════════════════════════════════════════════════════════════════════
+[ચકાસાયેલ જીવન તથ્યો - BIOGRAPHICAL FACTS]:
+${facts.length ? facts.map(f => `• ${f.title}: ${f.content} (સંદર્ભ: ${f.source_description || 'કૌટુંબિક દસ્તાવેજ'})`).join('\n') : '• કોઈ વિશેષ જીવનચરિત્ર તથ્યો નોંધાયેલા નથી.'}
+
+[કૌટુંબિક વાર્તાઓ અને સંસ્મરણો - STORIES & EVENTS]:
+${stories.length ? stories.map(s => `• ${s.title}: ${s.content}${s.source_timestamp ? ` [સમય: ${Math.floor(s.source_timestamp / 60)}m ${s.source_timestamp % 60}s]` : ''} (સ્ત્રોત: ${s.source_description || 'ઓડિયો/વીડિયો'})`).join('\n') : '• કોઈ ખાસ વાર્તાઓ દાખલ કરેલી નથી.'}
+
+[સ્વભાવ અને પસંદ-નાપસંદ - PERSONALITY]:
+${traits.length ? traits.map(t => `• ${t.title}: ${t.content}`).join('\n') : '• સામાન્ય કૌટુંબિક સ્નેહ.'}
+
+[જીવન દર્શન અને શીખામણ - VALUES]:
+${values.length ? values.map(v => `• ${v.title}: ${v.content}`).join('\n') : '• પરિવારને એક રાખવો અને સાચો માર્ગ પસંદ કરવો.'}
+
+═════════════════════════════════════════════════════════════════════
+સંવાદની રીત (CONVERSATION STYLE):
+═════════════════════════════════════════════════════════════════════
+- Start or conclude with natural maternal warmth: e.g. "બપોરા કર્યા કે ભૂખ્યા છો?", "તબિયત પાણી હારા છે ને?".
+- Keep responses conversational, comforting, and direct — not long academic essays.
+- Speak in authentic Kathiyawadi Gujarati script (ગુજરાતી લિપિ).
+- Never claim to have sensory experiences right now.
+`.trim();
+}
+
+/**
+ * Updates or sets the full family persona configuration.
+ */
+export async function updateFamilyPersonaProfile(
+  userId: string,
+  update: {
+    relationship?: string;
+    dialectConfig?: Partial<KathiyawadiDialectConfig>;
+    personaConfig?: Partial<PersonalityConfig>;
+  }
+): Promise<FamilyProfile> {
+  const existing = await queryOne<FamilyProfile>(
+    `SELECT relationship_to_grandmother, preferred_language, dialect, dialect_config, persona_config
+     FROM family_profiles WHERE user_id = $1`,
+    [userId]
+  );
+
+  const relationship = update.relationship || existing?.relationship_to_grandmother || 'grandson';
+
+  const mergedDialect: KathiyawadiDialectConfig = {
+    ...(existing?.dialect_config || {}),
+    ...(update.dialectConfig || {}),
+    addressForms: {
+      ...(existing?.dialect_config?.addressForms || {}),
+      ...(update.dialectConfig?.addressForms || {}),
+    },
+    customVocabulary: {
+      ...(existing?.dialect_config?.customVocabulary || {}),
+      ...(update.dialectConfig?.customVocabulary || {}),
+    },
   };
 
-  const newDialect = {
-    ...(existing?.dialect_config || {}),
-    ...(config.customVocabulary !== undefined ? { customVocabulary: config.customVocabulary } : {}),
-    ...(config.addressForms !== undefined ? { addressForms: config.addressForms } : {}),
+  const mergedPersona: PersonalityConfig = {
+    ...(existing?.persona_config || {}),
+    ...(update.personaConfig || {}),
+    traits: update.personaConfig?.traits || existing?.persona_config?.traits || [],
+    habits: update.personaConfig?.habits || existing?.persona_config?.habits || [],
+    values: update.personaConfig?.values || existing?.persona_config?.values || [],
+    cookingSpecialties: update.personaConfig?.cookingSpecialties || existing?.persona_config?.cookingSpecialties || [],
   };
 
   const { query: dbQuery } = await import('../../db/client');
   await dbQuery(
-    'UPDATE family_profiles SET persona_config = $1, dialect_config = $2, updated_at = NOW() WHERE user_id = $3',
-    [JSON.stringify(newPersona), JSON.stringify(newDialect), userId]
+    `UPDATE family_profiles
+     SET relationship_to_grandmother = $1,
+         dialect_config = $2,
+         persona_config = $3,
+         updated_at = NOW()
+     WHERE user_id = $4`,
+    [relationship, JSON.stringify(mergedDialect), JSON.stringify(mergedPersona), userId]
   );
+
+  return {
+    relationship_to_grandmother: relationship,
+    preferred_language: existing?.preferred_language || 'gu',
+    dialect: existing?.dialect || 'kathiyawadi',
+    dialect_config: mergedDialect,
+    persona_config: mergedPersona,
+  };
 }

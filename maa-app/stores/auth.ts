@@ -21,6 +21,7 @@ interface AuthState {
   refreshToken: () => Promise<boolean>;
   loadStoredAuth: () => Promise<void>;
   acceptDisclosure: () => void;
+  enterDemoMode: () => void;
 }
 
 const REFRESH_TOKEN_KEY = 'maa_refresh_token';
@@ -32,6 +33,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: false,
   isAuthenticated: false,
   disclosureAccepted: false,
+
+  enterDemoMode: () => {
+    set({
+      user: {
+        id: 'demo-preview-user',
+        email: 'family.preview@legacy.internal',
+        familyName: 'પરીવાર પૂર્વાવલોકન (Family Preview)',
+      },
+      accessToken: 'demo-offline-preview-token',
+      isAuthenticated: true,
+      disclosureAccepted: true,
+      isLoading: false,
+    });
+  },
 
   login: async (email, password) => {
     set({ isLoading: true });

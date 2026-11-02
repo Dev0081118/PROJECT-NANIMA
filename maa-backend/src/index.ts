@@ -12,6 +12,7 @@ import { memoriesRouter } from './routes/memories.routes';
 import { conversationRouter } from './routes/conversation.routes';
 import { voiceRouter } from './routes/voice.routes';
 import { avatarRouter } from './routes/avatar.routes';
+import { familyRouter } from './routes/family.routes';
 import { setupConversationWebSocket } from './services/conversation.service';
 
 const app = express();
@@ -51,6 +52,7 @@ app.use('/memories', memoriesRouter);
 app.use('/conversation', conversationRouter);
 app.use('/voice', voiceRouter);
 app.use('/avatar', avatarRouter);
+app.use('/family', familyRouter);
 
 // ─── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

@@ -15,8 +15,9 @@ describe('Persona Service', () => {
   it('builds a system prompt that includes Kathiyawadi dialect instructions', async () => {
     const prompt = await buildPersonaPrompt('user-123', [], 'gu');
     expect(prompt).toContain('Kathiyawadi');
-    expect(prompt).toContain('CRITICAL RULES');
-    expect(prompt).toContain('Never claim to be the actual grandmother');
+    expect(prompt).toContain('CRITICAL ETHICAL & INTEGRITY BOUNDARIES');
+    expect(prompt).toContain('Never claim to be the living person');
+    expect(prompt).toContain('કાઠિયાવાડી');
   });
 
   it('includes retrieved memories in the prompt', async () => {
@@ -36,10 +37,10 @@ describe('Persona Service', () => {
     expect(prompt).toContain('Rajkot');
   });
 
-  it('includes uncertainty guidelines', async () => {
+  it('includes uncertainty guidelines in authentic Gujarati', async () => {
     const prompt = await buildPersonaPrompt('user-123', [], 'gu');
-    expect(prompt).toContain('Mane yaad nathi');
-    expect(prompt).toContain('UNCERTAINTY RESPONSE GUIDE');
+    expect(prompt).toContain('મને બરોબર યાદ નથી');
+    expect(prompt).toContain('HONESTLY ADMIT UNCERTAINTY');
   });
 
   it('includes relationship context', async () => {

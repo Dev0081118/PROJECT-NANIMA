@@ -2,7 +2,7 @@
  * Screen 2: Family Setup
  * Configure relationship, upload media, review processing status.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, ScrollView,
   TouchableOpacity, TextInput, Alert, ActivityIndicator,
@@ -14,14 +14,67 @@ import { Typography, Spacing, BorderRadius } from '../../constants/Typography';
 import { apiClient } from '../../services/api';
 
 export default function SetupScreen() {
-  const [relationship, setRelationship] = useState('');
+  const [relationship, setRelationship] = useState('grandson');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
+
+  // Transcript ingestion state
+  const [transcriptText, setTranscriptText] = useState('');
+  const [transcriptSource, setTranscriptSource] = useState('');
+  const [isIngestingTranscript, setIsIngestingTranscript] = useState(false);
+  const [transcriptResult, setTranscriptResult] = useState<string | null>(null);
 
   const RELATIONSHIPS = [
     'grandson', 'granddaughter', 'son', 'daughter',
     'son-in-law', 'daughter-in-law', 'great-grandchild', 'other',
   ];
+
+  useEffect(() => {
+    // Load current profile on mount
+    apiClient.get<{ relationship?: string }>('/family/profile')
+      .then(res => {
+        if (res.relationship) setRelationship(res.relationship);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSelectRelationship = async (rel: string) => {
+    setRelationship(rel);
+    try {
+      await apiClient.patch('/family/profile', { relationship: rel });
+    } catch {
+      // Best-effort update
+    }
+  };
+
+  const handleIngestTranscript = async () => {
+    if (!transcriptText.trim()) {
+      Alert.alert('Required', 'Please enter transcript text or family notes.');
+      return;
+    }
+    const sourceDesc = transcriptSource.trim() || 'કૌટુંબિક વાતચીત (Family Notes)';
+    setIsIngestingTranscript(true);
+    setTranscriptResult(null);
+
+    try {
+      const res = await apiClient.post<{ message: string; result: { insertedCount: number } }>(
+        '/family/transcripts/ingest',
+        {
+          rawText: transcriptText,
+          sourceDescription: sourceDesc,
+          autoApprove: false,
+        }
+      );
+      setTranscriptResult(`✅ ${res.message} Review them in Yaadein (Memories).`);
+      setTranscriptText('');
+      setTranscriptSource('');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Ingestion failed.';
+      setTranscriptResult(`❌ ${msg}`);
+    } finally {
+      setIsIngestingTranscript(false);
+    }
+  };
 
   const uploadFile = async (uri: string, name: string, type: string) => {
     setIsUploading(true);
@@ -30,22 +83,11 @@ export default function SetupScreen() {
       const formData = new FormData();
       formData.append('file', { uri, name, type } as unknown as Blob);
 
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000'}/media`,
-        {
-          method: 'POST',
-          body: formData,
-          // Token handled by apiClient but FormData needs separate fetch
-        }
-      );
-
-      if (response.ok) {
-        setUploadStatus('✅ Uploaded successfully. Processing will begin shortly.');
-      } else {
-        setUploadStatus('❌ Upload failed. Please try again.');
-      }
-    } catch {
-      setUploadStatus('❌ Upload failed. Check your connection.');
+      await apiClient.uploadFormData('/media', formData);
+      setUploadStatus('✅ Uploaded successfully. Stored in your private family vault.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Upload failed. Check your connection.';
+      setUploadStatus(`❌ ${msg}`);
     } finally {
       setIsUploading(false);
     }
@@ -95,7 +137,7 @@ export default function SetupScreen() {
               <TouchableOpacity
                 key={r}
                 style={[styles.chip, relationship === r && styles.chipActive]}
-                onPress={() => setRelationship(r)}
+                onPress={() => handleSelectRelationship(r)}
               >
                 <Text style={[styles.chipText, relationship === r && styles.chipTextActive]}>
                   {r}
@@ -154,6 +196,55 @@ export default function SetupScreen() {
               <Text style={styles.uploadStatusText}>{uploadStatus}</Text>
             </View>
           )}
+        </View>
+
+        {/* Transcript & Notes Ingestion */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📝 Import Transcripts & Family Stories</Text>
+          <Text style={styles.sectionDesc}>
+            Paste verified transcripts from home cassette tapes, video recordings, or oral history notes.
+            The system categorizes them into verified facts, personal stories, and personality traits.
+          </Text>
+
+          <View style={styles.uploadCard}>
+            <Text style={styles.label}>Source Label / Context</Text>
+            <TextInput
+              style={styles.textInputShort}
+              value={transcriptSource}
+              onChangeText={setTranscriptSource}
+              placeholder="e.g. 1998 Diwali Cassette / Audio Recording from Rajkot"
+              placeholderTextColor={Colors.textMuted}
+            />
+
+            <Text style={[styles.label, { marginTop: Spacing.sm }]}>Transcript or Memories (Gujarati or English)</Text>
+            <TextInput
+              style={styles.textInputArea}
+              value={transcriptText}
+              onChangeText={setTranscriptText}
+              placeholder="લખો અથવા પેસ્ટ કરો (Paste verified quotes, life stories, or facts)..."
+              placeholderTextColor={Colors.textMuted}
+              multiline
+              numberOfLines={4}
+            />
+
+            <TouchableOpacity
+              style={[styles.uploadButton, (isIngestingTranscript || !transcriptText.trim()) && styles.uploadButtonDisabled]}
+              onPress={handleIngestTranscript}
+              disabled={isIngestingTranscript || !transcriptText.trim()}
+            >
+              {isIngestingTranscript ? (
+                <ActivityIndicator color={Colors.textOnPrimary} />
+              ) : (
+                <Text style={styles.uploadButtonText}>Ingest & Structure Memories</Text>
+              )}
+            </TouchableOpacity>
+
+            {transcriptResult && (
+              <View style={styles.uploadStatus}>
+                <Text style={styles.uploadStatusText}>{transcriptResult}</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {/* Privacy note */}
@@ -282,5 +373,32 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.sm,
     color: Colors.textSecondary,
     lineHeight: 19,
+  },
+  label: {
+    fontSize: Typography.fontSize.xs,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  textInputShort: {
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textPrimary,
+  },
+  textInputArea: {
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textPrimary,
+    minHeight: 90,
+    textAlignVertical: 'top',
+    marginBottom: Spacing.md,
   },
 });

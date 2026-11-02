@@ -17,7 +17,7 @@ export default function WelcomeScreen() {
   const [familyName, setFamilyName] = useState('');
   const [formError, setFormError] = useState('');
 
-  const { login, register, isLoading, acceptDisclosure } = useAuthStore();
+  const { login, register, isLoading, acceptDisclosure, enterDemoMode } = useAuthStore();
 
   const handleLogin = async () => {
     setFormError('');
@@ -86,6 +86,13 @@ export default function WelcomeScreen() {
             onPress={() => setMode('disclosure')}
           >
             <Text style={styles.primaryButtonText}>I Understand — Continue</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.demoButton}
+            onPress={enterDemoMode}
+          >
+            <Text style={styles.demoButtonText}>👁 Preview UI Screens (Offline Demo)</Text>
           </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
@@ -379,6 +386,20 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     fontSize: Typography.fontSize.base,
     color: Colors.textPrimary,
+  },
+  demoButton: {
+    backgroundColor: Colors.backgroundCard,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+  },
+  demoButtonText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
   },
   errorCard: {
     backgroundColor: '#FEF0F0',

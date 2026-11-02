@@ -1,0 +1,15 @@
+{
+  "name": "project-nanima",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Maa — Digital Legacy Monorepo",
+  "scripts": {
+    "start": "cd maa-app && npx expo start",
+    "app": "cd maa-app && npx expo start",
+    "backend": "cd maa-backend && npm run dev",
+    "test": "npm run test:backend && npm run test:app",
+    "test:backend": "cd maa-backend && npm test",
+    "test:app": "cd maa-app && npm test",
+    "typecheck": "cd maa-backend && npm run typecheck && cd ../maa-app && npm run typecheck"
+  }
+}

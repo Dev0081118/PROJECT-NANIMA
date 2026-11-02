@@ -20,16 +20,17 @@ import { AvatarDisplay } from '../../components/avatar/AvatarDisplay';
 import { VoiceButton } from '../../components/conversation/VoiceButton';
 import { ConversationBubble } from '../../components/conversation/ConversationBubble';
 import { StatusIndicator } from '../../components/conversation/StatusIndicator';
+import { audioService } from '../../services/audio';
 
 export default function ConversationScreen() {
   const [textInput, setTextInput] = useState('');
   const [showTextInput, setShowTextInput] = useState(false);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<any>(null);
 
   const {
     sessionId, turns, status, error,
-    startSession, sendTextMessage, endSession,
-    isTranscriptVisible, toggleTranscript, setError,
+    startSession, sendTextMessage, sendVoiceAudio, interruptSpeaking,
+    endSession, isTranscriptVisible, toggleTranscript, setError, setStatus,
   } = useConversationStore();
 
   useEffect(() => {
@@ -43,6 +44,45 @@ export default function ConversationScreen() {
       scrollRef.current?.scrollToEnd({ animated: true });
     }
   }, [turns.length]);
+
+  const handleVoicePress = async () => {
+    setError(null);
+
+    // If currently speaking, interrupt playback immediately
+    if (status === 'speaking') {
+      await interruptSpeaking();
+      return;
+    }
+
+    // If currently listening, stop recording and send to AI voice pipeline
+    if (status === 'listening') {
+      try {
+        const result = await audioService.stopRecording();
+        if (result && result.base64) {
+          await sendVoiceAudio(result.base64);
+        } else {
+          setStatus('ready');
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Error capturing audio.';
+        setError(msg);
+        setStatus('ready');
+      }
+      return;
+    }
+
+    // Otherwise (ready or idle), start recording
+    if (status === 'ready' || status === 'idle' || status === 'error') {
+      try {
+        await audioService.startRecording();
+        setStatus('listening');
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Microphone permission required.';
+        setError(msg);
+        setStatus('error');
+      }
+    }
+  };
 
   const handleSendText = async () => {
     const text = textInput.trim();
@@ -120,8 +160,8 @@ export default function ConversationScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Voice button (M3: connects to real microphone) */}
-        <VoiceButton status={status} onPress={() => setShowTextInput(v => !v)} />
+        {/* Voice button: Tap to record / Tap to finish / Tap to interrupt */}
+        <VoiceButton status={status} onPress={handleVoicePress} />
 
         {/* Text input (fallback + primary for M1) */}
         {showTextInput && (

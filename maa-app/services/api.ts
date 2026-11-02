@@ -15,6 +15,52 @@ class APIClient {
     this.accessToken = token;
   }
 
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+
+  getBaseUrl(): string {
+    return BASE_URL;
+  }
+
+  async uploadFormData<T>(path: string, formData: FormData): Promise<T> {
+    const headers: Record<string, string> = {};
+    if (this.accessToken) {
+      headers['Authorization'] = `Bearer ${this.accessToken}`;
+    }
+
+    const response = await fetch(`${BASE_URL}${path}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+
+    if (response.status === 401) {
+      const refreshed = await this.attemptTokenRefresh();
+      if (refreshed && this.accessToken) {
+        headers['Authorization'] = `Bearer ${this.accessToken}`;
+        const retryResponse = await fetch(`${BASE_URL}${path}`, {
+          method: 'POST',
+          headers,
+          body: formData,
+        });
+        if (!retryResponse.ok) {
+          const err = await retryResponse.json().catch(() => ({ error: retryResponse.statusText }));
+          throw new APIError(err.error || 'Upload failed', retryResponse.status);
+        }
+        return retryResponse.json() as Promise<T>;
+      }
+      throw new AuthError('Session expired. Please sign in again.');
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: response.statusText }));
+      throw new APIError(error.error || 'Upload failed', response.status);
+    }
+
+    return response.json() as Promise<T>;
+  }
+
   private async request<T>(
     method: HttpMethod,
     path: string,
